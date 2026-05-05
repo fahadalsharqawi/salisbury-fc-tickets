@@ -3,7 +3,7 @@ import { listBookings, listMatches } from "@/lib/db";
 import { formatKickoff } from "@/lib/format";
 import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
-import type { Match } from "@/lib/types";
+import type { BookingStatus, Match } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +59,7 @@ export default async function AdminBookingsPage({
           >
             <option value="all">{t("admin.all-statuses", locale)}</option>
             <option value="confirmed">{t("admin.status.confirmed", locale)}</option>
-            <option value="pending">{t("admin.status.pending", locale)}</option>
+            <option value="attended">Attended</option>
             <option value="cancelled">{t("admin.status.cancelled", locale)}</option>
           </select>
           <button
@@ -145,18 +145,22 @@ function StatusPill({
   status,
   locale,
 }: {
-  status: "pending" | "confirmed" | "cancelled";
+  status: BookingStatus;
   locale: Locale;
 }) {
   const styles =
     status === "confirmed"
       ? "bg-emerald-100 text-emerald-800"
-      : status === "pending"
-        ? "bg-amber-100 text-amber-800"
+      : status === "attended"
+        ? "bg-sky-100 text-sky-800"
         : "bg-stone-200 text-stone-600";
+  const label =
+    status === "attended"
+      ? "Attended"
+      : t(`admin.status.${status}`, locale);
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${styles}`}>
-      {t(`admin.status.${status}`, locale)}
+      {label}
     </span>
   );
 }

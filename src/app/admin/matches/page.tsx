@@ -1,4 +1,4 @@
-import { createMatchAction, deleteMatchAction } from "@/lib/actions";
+import { cancelMatchAction, createMatchAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency";
 import { listMatches } from "@/lib/db";
 import { dateInput, formatKickoff, formatMoney, timeInput } from "@/lib/format";
@@ -143,17 +143,19 @@ export default async function AdminMatchesPage({
                   </td>
                   <td className="px-5 py-3">{formatMoney(m.pricePerSeat, currency)}</td>
                   <td className="px-5 py-3 text-end">
-                    <form action={deleteMatchAction}>
+                    <form action={cancelMatchAction}>
                       <input type="hidden" name="id" value={m.id} />
+                      <input
+                        type="hidden"
+                        name="reason"
+                        value="Cancelled by club."
+                      />
                       <button
                         type="submit"
                         className="text-sm font-medium text-red-600 hover:underline disabled:opacity-40"
-                        disabled={m.ticketsSold > 0}
-                        title={
-                          m.ticketsSold > 0 ? t("admin.cancel-bookings-first", locale) : undefined
-                        }
+                        disabled={!!m.cancelledAt}
                       >
-                        {t("admin.delete", locale)}
+                        {m.cancelledAt ? "Cancelled" : "Cancel match"}
                       </button>
                     </form>
                   </td>

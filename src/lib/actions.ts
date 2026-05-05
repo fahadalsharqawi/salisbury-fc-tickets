@@ -4,14 +4,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
+  cancelBooking,
+  cancelMatch,
   createBooking,
   createMatch,
-  deleteMatch,
-  setBookingStatus,
+  markBookingAttended,
   updateMatch,
 } from "./db";
 import { allSeatIds } from "./seats";
-import type { BookingStatus, PaymentMethod } from "./types";
+import { createClient } from "./supabase/server";
+import type { CancelledBy, PaymentMethod } from "./types";
 import type { Currency } from "./format";
 import type { Locale } from "./i18n";
 
@@ -44,34 +46,59 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
   const phone = str(formData.get("phone"));
   const seats = parseSeats(str(formData.get("seats")));
   const notes = str(formData.get("notes")) || undefined;
+  const adultCount = Math.max(0, num(formData.get("adultCount")));
+  const concessionCount = Math.max(0, num(formData.get("concessionCount")));
+  const under17Count = Math.max(0, num(formData.get("under17Count")));
+  const under5Count = Math.max(0, num(formData.get("under5Count")));
   const rawMethod = str(formData.get("paymentMethod"));
   const paymentMethod: PaymentMethod = (
     ["card", "apple", "google"].includes(rawMethod) ? rawMethod : "card"
   ) as PaymentMethod;
 
+  function fail(msg: string): never {
+    redirect(`/tickets/${matchId}?error=${encodeURIComponent(msg)}`);
+  }
+
   if (!matchId || !customerName || !email || !phone) {
-    redirect(
-      `/tickets/${matchId}?error=${encodeURIComponent("Please fill in every required field.")}`,
-    );
+    fail("Please fill in every required field.");
   }
   if (seats.length === 0) {
-    redirect(
-      `/tickets/${matchId}?error=${encodeURIComponent("Pick at least one seat from the map.")}`,
-    );
+    fail("Pick at least one seat from the map.");
+  }
+  const totalCount = adultCount + concessionCount + under17Count + under5Count;
+  if (totalCount !== seats.length) {
+    fail(`Ticket counts must add up to ${seats.length} (you've got ${totalCount}).`);
+  }
+
+  // Attach to logged-in user, if any.
+  let userId: string | undefined;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    userId = user?.id;
+  } catch {
+    // Anonymous booking is fine.
   }
 
   const result = await createBooking({
     matchId,
+    userId,
     customerName,
     email,
     phone,
     seats,
+    adultCount,
+    concessionCount,
+    under17Count,
+    under5Count,
     paymentMethod,
     notes,
   });
 
   if (!result.ok) {
-    redirect(`/tickets/${matchId}?error=${encodeURIComponent(result.error)}`);
+    fail(result.error);
   }
 
   revalidatePath("/admin");
@@ -81,15 +108,38 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
   redirect(`/booking/${result.booking.id}`);
 }
 
-export async function setBookingStatusAction(formData: FormData): Promise<void> {
+export async function cancelBookingAction(formData: FormData): Promise<void> {
   const id = str(formData.get("id"));
-  const status = str(formData.get("status")) as BookingStatus;
-  if (!id || !["pending", "confirmed", "cancelled"].includes(status)) return;
-  await setBookingStatus(id, status);
+  const byRaw = str(formData.get("by")) as CancelledBy;
+  const by: CancelledBy = ["customer", "owner", "match"].includes(byRaw)
+    ? byRaw
+    : "customer";
+  const redirectTo = str(formData.get("redirectTo")) || `/booking/${id}`;
+  if (!id) return;
+  const result = await cancelBooking(id, by);
   revalidatePath("/admin");
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${id}`);
+  revalidatePath(`/booking/${id}`);
   revalidatePath("/tickets");
+  if (!result.ok) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(result.error)}`);
+  }
+  redirect(redirectTo);
+}
+
+export async function markAttendedAction(formData: FormData): Promise<void> {
+  const id = str(formData.get("id"));
+  if (!id) return;
+  const result = await markBookingAttended(id);
+  revalidatePath("/admin");
+  revalidatePath("/admin/bookings");
+  revalidatePath(`/admin/bookings/${id}`);
+  if (!result.ok) {
+    redirect(
+      `/admin/bookings/${id}?error=${encodeURIComponent(result.error)}`,
+    );
+  }
 }
 
 function parseMatchForm(formData: FormData) {
@@ -108,8 +158,16 @@ function parseMatchForm(formData: FormData) {
 
 export async function createMatchAction(formData: FormData): Promise<void> {
   const data = parseMatchForm(formData);
-  if (!data.opponent || !data.competition || !data.kickoff || !data.venue || data.pricePerSeat <= 0) {
-    redirect(`/admin/matches?error=${encodeURIComponent("Missing required fields.")}`);
+  if (
+    !data.opponent ||
+    !data.competition ||
+    !data.kickoff ||
+    !data.venue ||
+    data.pricePerSeat <= 0
+  ) {
+    redirect(
+      `/admin/matches?error=${encodeURIComponent("Missing required fields.")}`,
+    );
   }
   await createMatch(data);
   revalidatePath("/admin/matches");
@@ -127,6 +185,21 @@ export async function updateMatchAction(formData: FormData): Promise<void> {
   revalidatePath(`/tickets/${id}`);
 }
 
+export async function cancelMatchAction(formData: FormData): Promise<void> {
+  const id = str(formData.get("id"));
+  const reason = str(formData.get("reason")) || "Cancelled by club.";
+  if (!id) return;
+  const result = await cancelMatch(id, reason);
+  revalidatePath("/admin/matches");
+  revalidatePath("/admin/bookings");
+  revalidatePath("/tickets");
+  if (!result.ok && result.error) {
+    redirect(`/admin/matches?error=${encodeURIComponent(result.error)}`);
+  }
+  redirect("/admin/matches?ok=cancelled");
+}
+
+// Existing locale / currency / contact actions preserved from main.
 export async function setCurrencyAction(formData: FormData): Promise<void> {
   const raw = str(formData.get("currency"));
   const currency: Currency = raw === "KWD" ? "KWD" : "GBP";
@@ -152,19 +225,7 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
 }
 
 export async function submitContactAction(formData: FormData): Promise<void> {
-  // Demo: no real email pipeline — just bounce to a "sent" state via the URL.
   const name = str(formData.get("contactName"));
   if (!name) redirect(`/contact?error=${encodeURIComponent("Please add your name.")}`);
   redirect(`/contact?sent=${encodeURIComponent(name)}`);
-}
-
-export async function deleteMatchAction(formData: FormData): Promise<void> {
-  const id = str(formData.get("id"));
-  if (!id) return;
-  const result = await deleteMatch(id);
-  revalidatePath("/admin/matches");
-  revalidatePath("/tickets");
-  if (!result.ok && result.error) {
-    redirect(`/admin/matches?error=${encodeURIComponent(result.error)}`);
-  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBookingAction } from "@/lib/actions";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/lib/seats";
 import { formatMoney, type Currency } from "@/lib/format";
 import { t, type Locale } from "@/lib/i18n";
+import { calcTotal, tierPrices } from "@/lib/pricing";
 import type { MatchWithAvailability, PaymentMethod } from "@/lib/types";
 
 const SEAT_GAP = 4;
@@ -44,12 +45,18 @@ type Props = {
   error?: string;
   currency: Currency;
   locale: Locale;
+  prefill?: { name: string; email: string };
 };
 
-export default function BookingForm({ match, error, currency, locale }: Props) {
+export default function BookingForm({ match, error, currency, locale, prefill }: Props) {
   const booked = useMemo(() => new Set(match.bookedSeats), [match.bookedSeats]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [payment, setPayment] = useState<PaymentMethod>("card");
+
+  const [adultCount, setAdultCount] = useState(0);
+  const [concessionCount, setConcessionCount] = useState(0);
+  const [under17Count, setUnder17Count] = useState(0);
+  const [under5Count, setUnder5Count] = useState(0);
 
   function toggle(id: string) {
     if (booked.has(id)) return;
@@ -76,20 +83,32 @@ export default function BookingForm({ match, error, currency, locale }: Props) {
     });
   }
 
+  // Auto-rebalance: when seat count changes, top up / draw down adults.
+  useEffect(() => {
+    const target = selected.size;
+    const others = concessionCount + under17Count + under5Count;
+    if (others > target) {
+      setConcessionCount(0);
+      setUnder17Count(0);
+      setUnder5Count(0);
+      setAdultCount(target);
+      return;
+    }
+    setAdultCount(Math.max(0, target - others));
+  }, [selected.size, concessionCount, under17Count, under5Count]);
+
   const ordered = useMemo(() => sortSeatIds([...selected]), [selected]);
 
-  let terraceCount = 0;
-  let seatedCount = 0;
-  for (const id of ordered) {
-    const p = parseSeatId(id);
-    if (p && isMainStand(p.stand)) seatedCount++;
-    else terraceCount++;
-  }
-  const total =
-    terraceCount * match.pricePerSeat +
-    seatedCount * (match.pricePerSeat + MAIN_STAND_SURCHARGE);
+  const tiers = tierPrices(match.pricePerSeat);
+  const totalCount = adultCount + concessionCount + under17Count + under5Count;
+  const total = calcTotal({
+    basePerSeat: match.pricePerSeat,
+    counts: { adultCount, concessionCount, under17Count, under5Count },
+    seats: ordered,
+  });
 
-  const canPay = selected.size > 0 && !match.isSoldOut;
+  const countsMatch = totalCount === selected.size;
+  const canPay = selected.size > 0 && !match.isSoldOut && countsMatch;
 
   return (
     <form
@@ -99,6 +118,10 @@ export default function BookingForm({ match, error, currency, locale }: Props) {
       <input type="hidden" name="matchId" value={match.id} />
       <input type="hidden" name="seats" value={ordered.join(",")} />
       <input type="hidden" name="paymentMethod" value={payment} />
+      <input type="hidden" name="adultCount" value={adultCount} />
+      <input type="hidden" name="concessionCount" value={concessionCount} />
+      <input type="hidden" name="under17Count" value={under17Count} />
+      <input type="hidden" name="under5Count" value={under5Count} />
 
       <div className="space-y-4">
         <QuickPick
@@ -118,11 +141,25 @@ export default function BookingForm({ match, error, currency, locale }: Props) {
           className="anim-fade-up"
           style={{ ['--anim-delay' as string]: '180ms' }}
         >
+          <TierBreakdown
+            seatCount={selected.size}
+            tiers={tiers}
+            counts={{ adultCount, concessionCount, under17Count, under5Count }}
+            setAdult={setAdultCount}
+            setConcession={setConcessionCount}
+            setUnder17={setUnder17Count}
+            setUnder5={setUnder5Count}
+            countsMatch={countsMatch}
+            totalCount={totalCount}
+            currency={currency}
+          />
+        </div>
+        <div
+          className="anim-fade-up"
+          style={{ ['--anim-delay' as string]: '220ms' }}
+        >
           <Summary
             selected={ordered}
-            terraceCount={terraceCount}
-            seatedCount={seatedCount}
-            pricePerSeat={match.pricePerSeat}
             total={total}
             currency={currency}
             locale={locale}
@@ -142,8 +179,21 @@ export default function BookingForm({ match, error, currency, locale }: Props) {
           </div>
         )}
 
-        <Field label={t("form.full-name", locale)} name="customerName" required autoComplete="name" />
-        <Field label={t("form.email", locale)} name="email" type="email" required autoComplete="email" />
+        <Field
+          label={t("form.full-name", locale)}
+          name="customerName"
+          required
+          autoComplete="name"
+          defaultValue={prefill?.name}
+        />
+        <Field
+          label={t("form.email", locale)}
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          defaultValue={prefill?.email}
+        />
         <Field label={t("form.phone", locale)} name="phone" type="tel" required autoComplete="tel" />
 
         <label className="block text-sm font-medium text-stone-700">
@@ -503,17 +553,11 @@ function Chip({
 
 function Summary({
   selected,
-  terraceCount,
-  seatedCount,
-  pricePerSeat,
   total,
   currency,
   locale,
 }: {
   selected: string[];
-  terraceCount: number;
-  seatedCount: number;
-  pricePerSeat: number;
   total: number;
   currency: Currency;
   locale: Locale;
@@ -540,22 +584,119 @@ function Summary({
           <div className="text-2xl font-semibold">{formatMoney(total, currency)}</div>
         </div>
       </div>
-      {selected.length > 0 && (
-        <div className="mt-3 text-xs text-stone-500">
-          {terraceCount > 0 &&
-            t("seats.terrace-line", locale, {
-              n: terraceCount,
-              price: formatMoney(pricePerSeat, currency),
-            })}
-          {terraceCount > 0 && seatedCount > 0 && " · "}
-          {seatedCount > 0 &&
-            t("seats.main-stand-line", locale, {
-              n: seatedCount,
-              price: formatMoney(pricePerSeat + MAIN_STAND_SURCHARGE, currency),
-            })}
-        </div>
+    </div>
+  );
+}
+
+function TierBreakdown({
+  seatCount,
+  tiers,
+  counts,
+  setAdult,
+  setConcession,
+  setUnder17,
+  setUnder5,
+  countsMatch,
+  totalCount,
+  currency,
+}: {
+  seatCount: number;
+  tiers: ReturnType<typeof tierPrices>;
+  counts: {
+    adultCount: number;
+    concessionCount: number;
+    under17Count: number;
+    under5Count: number;
+  };
+  setAdult: (n: number) => void;
+  setConcession: (n: number) => void;
+  setUnder17: (n: number) => void;
+  setUnder5: (n: number) => void;
+  countsMatch: boolean;
+  totalCount: number;
+  currency: Currency;
+}) {
+  if (seatCount === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-5 text-sm text-stone-500">
+        Pick seats from the map to set ticket types.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-5">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold text-stone-900">Ticket types</h3>
+        <span
+          className={`text-xs font-medium ${
+            countsMatch ? "text-stone-500" : "text-red-600"
+          }`}
+        >
+          {totalCount} / {seatCount}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-stone-500">
+        Counts must add up to {seatCount} seat{seatCount === 1 ? "" : "s"}.
+      </p>
+      <ul className="mt-4 space-y-2.5">
+        <TierRow label="Adult" price={tiers.adult} value={counts.adultCount} onChange={setAdult} currency={currency} />
+        <TierRow label="Concession" price={tiers.concession} value={counts.concessionCount} onChange={setConcession} currency={currency} />
+        <TierRow label="Age 5–17" price={tiers.under17} value={counts.under17Count} onChange={setUnder17} currency={currency} />
+        <TierRow label="Under 5" price={tiers.under5} value={counts.under5Count} onChange={setUnder5} currency={currency} />
+      </ul>
+      {!countsMatch && (
+        <p className="mt-3 text-xs font-medium text-red-600">
+          {totalCount > seatCount
+            ? `Trim ${totalCount - seatCount} ticket${totalCount - seatCount === 1 ? "" : "s"}.`
+            : `Add ${seatCount - totalCount} more ticket${seatCount - totalCount === 1 ? "" : "s"}.`}
+        </p>
       )}
     </div>
+  );
+}
+
+function TierRow({
+  label,
+  price,
+  value,
+  onChange,
+  currency,
+}: {
+  label: string;
+  price: number;
+  value: number;
+  onChange: (n: number) => void;
+  currency: Currency;
+}) {
+  return (
+    <li className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="text-sm font-medium text-stone-900">{label}</div>
+        <div className="text-xs text-stone-500">
+          {price === 0 ? "Free" : `${formatMoney(price, currency)} each`}
+        </div>
+      </div>
+      <div className="inline-flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          disabled={value === 0}
+          aria-label={`Reduce ${label}`}
+          className="press flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-lg leading-none text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          −
+        </button>
+        <span className="w-6 text-center text-sm font-semibold tabular-nums">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          aria-label={`Add ${label}`}
+          className="press flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-lg leading-none text-stone-700 transition hover:bg-stone-100"
+        >
+          +
+        </button>
+      </div>
+    </li>
   );
 }
 

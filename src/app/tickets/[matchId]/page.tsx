@@ -6,6 +6,7 @@ import { formatLongKickoff, formatMoney } from "@/lib/format";
 import { localize, t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
 import { MAIN_STAND_SURCHARGE } from "@/lib/seats";
+import { createClient } from "@/lib/supabase/server";
 import BookingForm from "./BookingForm";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,17 @@ export default async function BookingFormPage({
   const locale = await getLocale();
   const match = await getMatch(matchId);
   if (!match) notFound();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const prefill = user
+    ? {
+        name: (user.user_metadata?.name as string | undefined) ?? "",
+        email: user.email ?? "",
+      }
+    : undefined;
 
   return (
     <>
@@ -104,6 +116,7 @@ export default async function BookingFormPage({
           error={error}
           currency={currency}
           locale={locale}
+          prefill={prefill}
         />
       </div>
     </>

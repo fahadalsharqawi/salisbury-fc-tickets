@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { setBookingStatusAction } from "@/lib/actions";
+import { cancelBookingAction, markAttendedAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
 import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
+import { tierLabel, tierPrices } from "@/lib/pricing";
+import type { BookingStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ export default async function AdminBookingDetail({
   if (!booking) notFound();
   const match = await getMatch(booking.matchId);
   const total = match ? bookingTotal(booking, match) : 0;
+  const tiers = match ? tierPrices(match.pricePerSeat) : null;
 
   return (
     <div className="space-y-6">
@@ -77,6 +80,34 @@ export default async function AdminBookingDetail({
               </div>
             </div>
 
+            {tiers && (
+              <div className="mt-5">
+                <Label>Headcount</Label>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <TierRow
+                    label={tierLabel("adult")}
+                    count={booking.adultCount}
+                    price={tiers.adult}
+                  />
+                  <TierRow
+                    label={tierLabel("concession")}
+                    count={booking.concessionCount}
+                    price={tiers.concession}
+                  />
+                  <TierRow
+                    label={tierLabel("under17")}
+                    count={booking.under17Count}
+                    price={tiers.under17}
+                  />
+                  <TierRow
+                    label={tierLabel("under5")}
+                    count={booking.under5Count}
+                    price={tiers.under5}
+                  />
+                </ul>
+              </div>
+            )}
+
             {booking.notes && (
               <div className="mt-5 rounded-lg bg-stone-50 p-4 text-sm text-stone-700">
                 <Label>{t("common.notes", locale)}</Label>
@@ -102,53 +133,55 @@ export default async function AdminBookingDetail({
 
         <aside className="space-y-3 rounded-2xl border border-stone-200 bg-white p-6">
           <Label>{t("admin.update-status", locale)}</Label>
-          <StatusForm id={booking.id} target="confirmed" disabled={booking.status === "confirmed"}>
-            {t("admin.mark-confirmed", locale)}
-          </StatusForm>
-          <StatusForm id={booking.id} target="pending" disabled={booking.status === "pending"}>
-            {t("admin.mark-pending", locale)}
-          </StatusForm>
-          <StatusForm
-            id={booking.id}
-            target="cancelled"
-            disabled={booking.status === "cancelled"}
-            variant="danger"
-          >
-            {t("admin.cancel-booking", locale)}
-          </StatusForm>
+          <form action={markAttendedAction}>
+            <input type="hidden" name="id" value={booking.id} />
+            <button
+              type="submit"
+              disabled={booking.status !== "confirmed"}
+              className="block w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Mark attended
+            </button>
+          </form>
+          <form action={cancelBookingAction}>
+            <input type="hidden" name="id" value={booking.id} />
+            <input type="hidden" name="by" value="owner" />
+            <input
+              type="hidden"
+              name="redirectTo"
+              value={`/admin/bookings/${booking.id}`}
+            />
+            <button
+              type="submit"
+              disabled={booking.status === "cancelled"}
+              className="block w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {t("admin.cancel-booking", locale)}
+            </button>
+          </form>
         </aside>
       </div>
     </div>
   );
 }
 
-function StatusForm({
-  id,
-  target,
-  disabled,
-  variant,
-  children,
+function TierRow({
+  label,
+  count,
+  price,
 }: {
-  id: string;
-  target: "confirmed" | "pending" | "cancelled";
-  disabled?: boolean;
-  variant?: "danger";
-  children: React.ReactNode;
+  label: string;
+  count: number;
+  price: number;
 }) {
-  const base =
-    "block w-full rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40";
-  const colors =
-    variant === "danger"
-      ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-      : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100";
+  if (count === 0) return null;
   return (
-    <form action={setBookingStatusAction}>
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="status" value={target} />
-      <button type="submit" disabled={disabled} className={`${base} ${colors}`}>
-        {children}
-      </button>
-    </form>
+    <li className="flex items-baseline justify-between text-stone-700">
+      <span>
+        {label} × {count}
+      </span>
+      <span className="text-stone-500">£{price * count}</span>
+    </li>
   );
 }
 
@@ -181,18 +214,22 @@ function StatusPill({
   status,
   locale,
 }: {
-  status: "pending" | "confirmed" | "cancelled";
+  status: BookingStatus;
   locale: Locale;
 }) {
   const styles =
     status === "confirmed"
       ? "bg-emerald-100 text-emerald-800"
-      : status === "pending"
-        ? "bg-amber-100 text-amber-800"
+      : status === "attended"
+        ? "bg-sky-100 text-sky-800"
         : "bg-stone-200 text-stone-600";
+  const label =
+    status === "attended"
+      ? "Attended"
+      : t(`admin.status.${status}`, locale);
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles}`}>
-      {t(`admin.status.${status}`, locale)}
+      {label}
     </span>
   );
 }
