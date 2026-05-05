@@ -3,6 +3,7 @@ import { Inter, Manrope, Noto_Sans_Arabic, Oswald } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
+import { signOutAction } from "@/lib/auth";
 import { getCurrency, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import {
   LOCALE_DIR,
@@ -11,6 +12,7 @@ import {
   t,
 } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const inter = Inter({
@@ -70,6 +72,12 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const currency = await getCurrency();
   const locale = await getLocale();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const displayName =
+    (user?.user_metadata?.name as string | undefined) ?? user?.email ?? null;
   return (
     <html
       lang={locale}
@@ -123,6 +131,29 @@ export default async function RootLayout({
                   SUPPORTED_CURRENCIES.map((c) => [c, c]),
                 ) as Record<string, string>}
               />
+              {user ? (
+                <form action={signOutAction} className="hidden sm:flex sm:items-center sm:gap-2">
+                  <span
+                    className="max-w-[140px] truncate text-xs font-medium text-sfc-n-600"
+                    title={displayName ?? undefined}
+                  >
+                    {displayName}
+                  </span>
+                  <button
+                    type="submit"
+                    className="sfc-btn sfc-btn--ghost sfc-btn--sm"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              ) : (
+                <Link
+                  href="/sign-in"
+                  className="sfc-btn sfc-btn--ghost sfc-btn--sm hidden sm:inline-flex"
+                >
+                  Sign in
+                </Link>
+              )}
               <Link
                 href="/tickets"
                 className="sfc-btn sfc-btn--live sfc-btn--sm hidden sm:inline-flex"
