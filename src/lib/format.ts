@@ -1,3 +1,20 @@
+export type Currency = "GBP" | "KWD";
+
+export const CURRENCY_RATES: Record<Currency, number> = {
+  GBP: 1,
+  KWD: 0.39,
+};
+
+export const CURRENCY_LABELS: Record<Currency, string> = {
+  GBP: "GBP",
+  KWD: "KWD",
+};
+
+const CURRENCY_FRACTION: Record<Currency, number> = {
+  GBP: 0,
+  KWD: 3,
+};
+
 export function formatKickoff(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString(undefined, {
@@ -21,12 +38,15 @@ export function formatLongKickoff(iso: string): string {
   });
 }
 
-export function formatMoney(value: number): string {
+export function formatMoney(amountGBP: number, currency: Currency = "GBP"): string {
+  const rate = CURRENCY_RATES[currency];
+  const fraction = CURRENCY_FRACTION[currency];
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 0,
-  }).format(value);
+    currency,
+    minimumFractionDigits: fraction,
+    maximumFractionDigits: fraction,
+  }).format(amountGBP * rate);
 }
 
 export function dateInput(iso: string): string {

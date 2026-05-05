@@ -1,10 +1,15 @@
 import Link from "next/link";
+import { getCurrency } from "@/lib/currency";
 import { getStats, listBookings, listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
+import { localize, t, type Locale } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  const currency = await getCurrency();
+  const locale = await getLocale();
   const stats = await getStats();
   const bookings = (await listBookings()).slice(0, 5);
   const matches = (await listMatches({ upcomingOnly: true })).slice(0, 5);
@@ -12,29 +17,33 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Tickets sold" value={stats.ticketsSold.toString()} />
-        <Stat label="Active bookings" value={stats.activeBookings.toString()} />
+        <Stat label={t("admin.stat.tickets-sold", locale)} value={stats.ticketsSold.toString()} />
+        <Stat label={t("admin.stat.active-bookings", locale)} value={stats.activeBookings.toString()} />
         <Stat
-          label="Upcoming fixtures"
-          value={`${stats.upcomingMatches}${stats.soldOutMatches ? ` (${stats.soldOutMatches} sold out)` : ""}`}
+          label={t("admin.stat.upcoming-fixtures", locale)}
+          value={`${stats.upcomingMatches}${
+            stats.soldOutMatches
+              ? ` ${t("admin.stat.sold-out-of", locale, { n: stats.soldOutMatches })}`
+              : ""
+          }`}
         />
-        <Stat label="Revenue" value={formatMoney(stats.revenue)} accent />
+        <Stat label={t("admin.stat.revenue", locale)} value={formatMoney(stats.revenue, currency)} accent />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-stone-200 bg-white">
           <header className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-            <h2 className="font-semibold">Recent bookings</h2>
+            <h2 className="font-semibold">{t("admin.recent-bookings", locale)}</h2>
             <Link
               href="/admin/bookings"
               className="text-sm font-medium text-emerald-700 hover:underline"
             >
-              View all →
+              {t("admin.view-all", locale)}
             </Link>
           </header>
           {bookings.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-stone-500">
-              No bookings yet.
+              {t("admin.no-bookings", locale)}
             </div>
           ) : (
             <ul className="divide-y divide-stone-200">
@@ -47,10 +56,18 @@ export default async function AdminDashboardPage() {
                     <div>
                       <div className="font-medium">{b.customerName}</div>
                       <div className="text-xs text-stone-500">
-                        {b.seats.length} seat{b.seats.length === 1 ? "" : "s"} · {new Date(b.createdAt).toLocaleString()}
+                        {t(
+                          b.seats.length === 1 ? "admin.seat-count" : "admin.seats-count",
+                          locale,
+                          { n: b.seats.length },
+                        )}{" "}
+                        ·{" "}
+                        {new Date(b.createdAt).toLocaleString(
+                          locale === "ar" ? "ar" : undefined,
+                        )}
                       </div>
                     </div>
-                    <StatusPill status={b.status} />
+                    <StatusPill status={b.status} locale={locale} />
                   </Link>
                 </li>
               ))}
@@ -60,26 +77,29 @@ export default async function AdminDashboardPage() {
 
         <section className="rounded-2xl border border-stone-200 bg-white">
           <header className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-            <h2 className="font-semibold">Next up</h2>
+            <h2 className="font-semibold">{t("admin.next-up", locale)}</h2>
             <Link
               href="/admin/matches"
               className="text-sm font-medium text-emerald-700 hover:underline"
             >
-              Manage fixtures →
+              {t("admin.manage-fixtures", locale)}
             </Link>
           </header>
           {matches.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-stone-500">
-              No upcoming fixtures.
+              {t("admin.no-upcoming", locale)}
             </div>
           ) : (
             <ul className="divide-y divide-stone-200">
               {matches.map((m) => (
                 <li key={m.id} className="flex items-center justify-between px-5 py-3">
                   <div>
-                    <div className="font-medium">vs {m.opponent}</div>
+                    <div className="font-medium">
+                      {t("common.vs", locale)} {localize(m.opponent, locale)}
+                    </div>
                     <div className="text-xs text-stone-500">
-                      {formatKickoff(m.kickoff)} · {m.isHome ? "Home" : "Away"}
+                      {formatKickoff(m.kickoff)} ·{" "}
+                      {m.isHome ? t("common.home", locale) : t("common.away", locale)}
                     </div>
                   </div>
                   <span
@@ -128,7 +148,13 @@ function Stat({
   );
 }
 
-function StatusPill({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
+function StatusPill({
+  status,
+  locale,
+}: {
+  status: "pending" | "confirmed" | "cancelled";
+  locale: Locale;
+}) {
   const styles =
     status === "confirmed"
       ? "bg-emerald-100 text-emerald-800"
@@ -136,8 +162,8 @@ function StatusPill({ status }: { status: "pending" | "confirmed" | "cancelled" 
         ? "bg-amber-100 text-amber-800"
         : "bg-stone-200 text-stone-600";
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${styles}`}>
-      {status}
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${styles}`}>
+      {t(`admin.status.${status}`, locale)}
     </span>
   );
 }

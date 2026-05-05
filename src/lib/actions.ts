@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
@@ -11,6 +12,8 @@ import {
 } from "./db";
 import { allSeatIds } from "./seats";
 import type { BookingStatus, PaymentMethod } from "./types";
+import type { Currency } from "./format";
+import type { Locale } from "./i18n";
 
 function str(v: FormDataEntryValue | null): string {
   return typeof v === "string" ? v.trim() : "";
@@ -122,6 +125,37 @@ export async function updateMatchAction(formData: FormData): Promise<void> {
   revalidatePath("/admin/matches");
   revalidatePath("/tickets");
   revalidatePath(`/tickets/${id}`);
+}
+
+export async function setCurrencyAction(formData: FormData): Promise<void> {
+  const raw = str(formData.get("currency"));
+  const currency: Currency = raw === "KWD" ? "KWD" : "GBP";
+  const cookieStore = await cookies();
+  cookieStore.set("currency", currency, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  revalidatePath("/", "layout");
+}
+
+export async function setLocaleAction(formData: FormData): Promise<void> {
+  const raw = str(formData.get("locale"));
+  const locale: Locale = raw === "ar" ? "ar" : "en";
+  const cookieStore = await cookies();
+  cookieStore.set("locale", locale, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  revalidatePath("/", "layout");
+}
+
+export async function submitContactAction(formData: FormData): Promise<void> {
+  // Demo: no real email pipeline — just bounce to a "sent" state via the URL.
+  const name = str(formData.get("contactName"));
+  if (!name) redirect(`/contact?error=${encodeURIComponent("Please add your name.")}`);
+  redirect(`/contact?sent=${encodeURIComponent(name)}`);
 }
 
 export async function deleteMatchAction(formData: FormData): Promise<void> {

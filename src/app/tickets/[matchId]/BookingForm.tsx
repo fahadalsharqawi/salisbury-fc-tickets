@@ -9,13 +9,15 @@ import {
   type StandConfig,
   type StandId,
   colsOf,
+  findAdjacentSeats,
   getStand,
   isMainStand,
   parseSeatId,
   rowsOf,
   seatId,
 } from "@/lib/seats";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, type Currency } from "@/lib/format";
+import { t, type Locale } from "@/lib/i18n";
 import type { MatchWithAvailability, PaymentMethod } from "@/lib/types";
 
 const SEAT_GAP = 4;
@@ -40,9 +42,11 @@ const SOUTH_H = unit(S.rows) + STAND_PADDING * 2;
 type Props = {
   match: MatchWithAvailability;
   error?: string;
+  currency: Currency;
+  locale: Locale;
 };
 
-export default function BookingForm({ match, error }: Props) {
+export default function BookingForm({ match, error, currency, locale }: Props) {
   const booked = useMemo(() => new Set(match.bookedSeats), [match.bookedSeats]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [payment, setPayment] = useState<PaymentMethod>("card");
@@ -53,6 +57,21 @@ export default function BookingForm({ match, error }: Props) {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function quickPick(count: number) {
+    const taken = new Set([...booked, ...selected]);
+    const found = findAdjacentSeats(count, taken);
+    if (found.length === 0) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const id of found) next.add(id);
       return next;
     });
   }
@@ -82,11 +101,18 @@ export default function BookingForm({ match, error }: Props) {
       <input type="hidden" name="paymentMethod" value={payment} />
 
       <div className="space-y-4">
+        <QuickPick
+          onPick={quickPick}
+          onClear={clearSelection}
+          selectedCount={selected.size}
+          remaining={match.remaining}
+          locale={locale}
+        />
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-4 sm:p-6">
           <div className="overflow-x-auto">
-            <Bowl booked={booked} selected={selected} toggle={toggle} />
+            <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
           </div>
-          <Legend />
+          <Legend currency={currency} locale={locale} />
         </div>
         <div
           className="anim-fade-up"
@@ -98,12 +124,17 @@ export default function BookingForm({ match, error }: Props) {
             seatedCount={seatedCount}
             pricePerSeat={match.pricePerSeat}
             total={total}
+            currency={currency}
+            locale={locale}
           />
         </div>
       </div>
 
-      <aside className="lg:sticky lg:top-6 h-fit space-y-5 rounded-2xl border border-stone-200 bg-white p-5">
-        <h2 className="text-base font-semibold">Your details</h2>
+      <aside
+        id="checkout"
+        className="lg:sticky lg:top-6 h-fit space-y-5 rounded-2xl border border-stone-200 bg-white p-5 scroll-mt-6"
+      >
+        <h2 className="text-base font-semibold">{t("form.your-details", locale)}</h2>
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -111,15 +142,16 @@ export default function BookingForm({ match, error }: Props) {
           </div>
         )}
 
-        <Field label="Full name" name="customerName" required autoComplete="name" />
-        <Field label="Email" name="email" type="email" required autoComplete="email" />
-        <Field label="Phone" name="phone" type="tel" required autoComplete="tel" />
+        <Field label={t("form.full-name", locale)} name="customerName" required autoComplete="name" />
+        <Field label={t("form.email", locale)} name="email" type="email" required autoComplete="email" />
+        <Field label={t("form.phone", locale)} name="phone" type="tel" required autoComplete="tel" />
 
         <label className="block text-sm font-medium text-stone-700">
-          Notes (optional)
+          {t("form.notes-optional", locale)}
           <textarea
             name="notes"
             rows={2}
+            placeholder={t("form.notes-placeholder", locale)}
             className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           />
         </label>
@@ -127,29 +159,35 @@ export default function BookingForm({ match, error }: Props) {
         <div className="border-t border-stone-200 pt-5">
           <div className="flex items-baseline justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-              Payment
+              {t("pay.heading", locale)}
             </h3>
-            <span className="text-xs text-stone-500">Demo only</span>
+            <span className="text-xs text-stone-500">{t("common.demo-only", locale)}</span>
           </div>
 
-          <PaymentTabs value={payment} onChange={setPayment} />
+          <PaymentTabs value={payment} onChange={setPayment} locale={locale} />
 
-          {payment === "card" && <CardFields />}
+          {payment === "card" && <CardFields locale={locale} />}
           {payment !== "card" && (
             <div className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">
               {payment === "apple"
-                ? "You'll authenticate with Touch ID / Face ID on your device."
-                : "Sign in to your Google account to confirm."}
+                ? t("pay.apple-note", locale)
+                : t("pay.google-note", locale)}
             </div>
           )}
         </div>
 
-        <PayButton method={payment} total={total} disabled={!canPay} />
+        <PayButton method={payment} total={total} disabled={!canPay} currency={currency} locale={locale} />
 
-        <p className="text-xs text-stone-500">
-          Seats aren't reserved until you confirm. You'll get a reference number on the next screen.
-        </p>
+        <p className="text-xs text-stone-500">{t("form.no-reserve", locale)}</p>
       </aside>
+
+      <MobileCheckoutBar
+        count={selected.size}
+        total={total}
+        disabled={!canPay}
+        currency={currency}
+        locale={locale}
+      />
     </form>
   );
 }
@@ -160,10 +198,12 @@ function Bowl({
   booked,
   selected,
   toggle,
+  locale,
 }: {
   booked: Set<string>;
   selected: Set<string>;
   toggle: (id: string) => void;
+  locale: Locale;
 }) {
   const totalWidth = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
   return (
@@ -178,15 +218,15 @@ function Bowl({
       }}
     >
       <Corner />
-      <NorthStand booked={booked} selected={selected} toggle={toggle} />
+      <NorthStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
       <Corner />
 
-      <WestStand booked={booked} selected={selected} toggle={toggle} />
-      <Pitch />
-      <EastStand booked={booked} selected={selected} toggle={toggle} />
+      <WestStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
+      <Pitch locale={locale} />
+      <EastStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
 
       <Corner />
-      <SouthStand booked={booked} selected={selected} toggle={toggle} />
+      <SouthStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
       <Corner />
     </div>
   );
@@ -235,11 +275,12 @@ type SeatGridProps = {
   booked: Set<string>;
   selected: Set<string>;
   toggle: (id: string) => void;
+  locale: Locale;
 };
 
 function NorthStand(p: SeatGridProps) {
   return (
-    <StandFrame label={N.name} axis="horizontal">
+    <StandFrame label={t("seats.north-end", p.locale)} axis="horizontal">
       <div
         className="flex flex-col items-center justify-end"
         style={{ gap: SEAT_GAP, height: "100%" }}
@@ -254,7 +295,7 @@ function NorthStand(p: SeatGridProps) {
 
 function SouthStand(p: SeatGridProps) {
   return (
-    <StandFrame label={S.name} axis="horizontal">
+    <StandFrame label={t("seats.south-end", p.locale)} axis="horizontal">
       <div
         className="flex flex-col items-center justify-start"
         style={{ gap: SEAT_GAP, height: "100%" }}
@@ -269,7 +310,7 @@ function SouthStand(p: SeatGridProps) {
 
 function WestStand(p: SeatGridProps) {
   return (
-    <StandFrame label={W.name} axis="vertical">
+    <StandFrame label={t("seats.main-stand", p.locale)} axis="vertical">
       <div
         className="flex h-full items-stretch justify-end"
         style={{ gap: SEAT_GAP }}
@@ -284,7 +325,7 @@ function WestStand(p: SeatGridProps) {
 
 function EastStand(p: SeatGridProps) {
   return (
-    <StandFrame label={E.name} axis="vertical">
+    <StandFrame label={t("seats.east-terrace", p.locale)} axis="vertical">
       <div
         className="flex h-full items-stretch justify-start"
         style={{ gap: SEAT_GAP }}
@@ -374,12 +415,12 @@ function SeatBtn({
         facingClass,
         "border text-[9px] font-semibold leading-none transition active:scale-[0.92]",
         booked
-          ? "cursor-not-allowed border-stone-300 bg-stone-200 text-stone-400"
+          ? "cursor-not-allowed border-sfc-n-300 bg-sfc-n-200 text-sfc-n-400"
           : selected
-            ? "border-emerald-700 bg-emerald-600 text-white shadow-sm"
+            ? "border-sfc-navy-deep bg-sfc-navy text-white shadow-sm"
             : seated
               ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
-              : "border-stone-300 bg-white text-stone-600 hover:bg-stone-100",
+              : "border-sfc-n-300 bg-white text-sfc-n-600 hover:bg-sfc-n-100",
       ].join(" ")}
       style={{ width: SEAT_PX, height: SEAT_PX }}
     >
@@ -389,7 +430,7 @@ function SeatBtn({
   );
 }
 
-function Pitch() {
+function Pitch({ locale }: { locale: Locale }) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-md shadow-inner ring-1 ring-emerald-900/30">
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700" />
@@ -419,25 +460,27 @@ function Pitch() {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="rounded-full bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.4em] text-white/80 ring-1 ring-white/20 backdrop-blur-sm">
-          Pitch
+          {t("seats.pitch", locale)}
         </span>
       </div>
     </div>
   );
 }
 
-function Legend() {
+function Legend({ currency, locale }: { currency: Currency; locale: Locale }) {
   return (
     <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-stone-600">
-      <Chip className="border-stone-300 bg-white">Terrace</Chip>
+      <Chip className="border-stone-300 bg-white">{t("seats.legend.terrace", locale)}</Chip>
       <Chip className="border-amber-300 bg-amber-100 text-amber-900">
-        Main Stand seat (+{formatMoney(MAIN_STAND_SURCHARGE)})
+        {t("seats.legend.main-stand", locale, {
+          amount: formatMoney(MAIN_STAND_SURCHARGE, currency),
+        })}
       </Chip>
-      <Chip className="border-emerald-700 bg-emerald-600 text-white">
-        Selected
+      <Chip className="border-sfc-navy-deep bg-sfc-navy text-white">
+        {t("seats.legend.selected", locale)}
       </Chip>
       <Chip className="border-stone-300 bg-stone-200 text-stone-400">
-        Taken
+        {t("seats.legend.taken", locale)}
       </Chip>
     </div>
   );
@@ -464,23 +507,27 @@ function Summary({
   seatedCount,
   pricePerSeat,
   total,
+  currency,
+  locale,
 }: {
   selected: string[];
   terraceCount: number;
   seatedCount: number;
   pricePerSeat: number;
   total: number;
+  currency: Currency;
+  locale: Locale;
 }) {
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
           <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-            Your selection
+            {t("seats.your-selection", locale)}
           </div>
           <div className="mt-1 text-sm font-semibold text-stone-900">
             {selected.length === 0 ? (
-              <span className="text-stone-500">No seats selected</span>
+              <span className="text-stone-500">{t("seats.no-seats-selected", locale)}</span>
             ) : (
               <span className="break-words">{selected.join(", ")}</span>
             )}
@@ -488,24 +535,24 @@ function Summary({
         </div>
         <div className="text-right">
           <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-            Total
+            {t("common.total", locale)}
           </div>
-          <div className="text-2xl font-semibold">{formatMoney(total)}</div>
+          <div className="text-2xl font-semibold">{formatMoney(total, currency)}</div>
         </div>
       </div>
       {selected.length > 0 && (
         <div className="mt-3 text-xs text-stone-500">
-          {terraceCount > 0 && (
-            <>
-              {terraceCount} terrace × {formatMoney(pricePerSeat)}
-            </>
-          )}
+          {terraceCount > 0 &&
+            t("seats.terrace-line", locale, {
+              n: terraceCount,
+              price: formatMoney(pricePerSeat, currency),
+            })}
           {terraceCount > 0 && seatedCount > 0 && " · "}
-          {seatedCount > 0 && (
-            <>
-              {seatedCount} Main Stand × {formatMoney(pricePerSeat + MAIN_STAND_SURCHARGE)}
-            </>
-          )}
+          {seatedCount > 0 &&
+            t("seats.main-stand-line", locale, {
+              n: seatedCount,
+              price: formatMoney(pricePerSeat + MAIN_STAND_SURCHARGE, currency),
+            })}
         </div>
       )}
     </div>
@@ -517,14 +564,16 @@ function Summary({
 function PaymentTabs({
   value,
   onChange,
+  locale,
 }: {
   value: PaymentMethod;
   onChange: (v: PaymentMethod) => void;
+  locale: Locale;
 }) {
   const tabs: { id: PaymentMethod; label: string }[] = [
-    { id: "card", label: "Card" },
-    { id: "apple", label: "Apple Pay" },
-    { id: "google", label: "Google Pay" },
+    { id: "card", label: t("pay.tab.card", locale) },
+    { id: "apple", label: t("pay.tab.apple", locale) },
+    { id: "google", label: t("pay.tab.google", locale) },
   ];
   const activeIndex = tabs.findIndex((t) => t.id === value);
   return (
@@ -556,40 +605,186 @@ function PaymentTabs({
   );
 }
 
-function CardFields() {
+function CardFields({ locale }: { locale: Locale }) {
+  const [number, setNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const brand = detectBrand(number);
+
   return (
     <div className="mt-4 space-y-3">
+      <label className="block text-sm font-medium text-stone-700">
+        {t("pay.card-number", locale)}
+        <span className="relative mt-1.5 block">
+          <input
+            name="cardNumber"
+            value={number}
+            onChange={(e) => setNumber(formatCardNumber(e.target.value))}
+            placeholder="4242 4242 4242 4242"
+            inputMode="numeric"
+            autoComplete="cc-number"
+            maxLength={23}
+            dir="ltr"
+            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 pe-14 font-mono text-sm tracking-[0.05em] shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          />
+          <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+            {brand}
+          </span>
+        </span>
+      </label>
       <Field
-        label="Card number"
-        name="cardNumber"
-        placeholder="4242 4242 4242 4242"
-        inputMode="numeric"
-        autoComplete="cc-number"
-      />
-      <Field
-        label="Name on card"
+        label={t("pay.card-name", locale)}
         name="cardName"
         placeholder="J. SMITH"
         autoComplete="cc-name"
       />
       <div className="grid grid-cols-2 gap-3">
-        <Field
-          label="Expiry"
-          name="cardExpiry"
-          placeholder="MM/YY"
-          autoComplete="cc-exp"
-        />
-        <Field
-          label="CVV"
-          name="cardCvv"
-          placeholder="123"
-          inputMode="numeric"
-          autoComplete="cc-csc"
-        />
+        <label className="block text-sm font-medium text-stone-700">
+          {t("pay.card-expiry", locale)}
+          <input
+            name="cardExpiry"
+            value={expiry}
+            onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+            placeholder="MM/YY"
+            inputMode="numeric"
+            autoComplete="cc-exp"
+            maxLength={5}
+            dir="ltr"
+            className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          />
+        </label>
+        <label className="block text-sm font-medium text-stone-700">
+          {t("pay.card-cvv", locale)}
+          <input
+            name="cardCvv"
+            value={cvv}
+            onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            placeholder="123"
+            inputMode="numeric"
+            autoComplete="cc-csc"
+            dir="ltr"
+            className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          />
+        </label>
       </div>
-      <p className="text-xs text-stone-500">
-        Any values accepted — nothing is charged.
-      </p>
+      <p className="text-xs text-stone-500">{t("pay.demo-card-note", locale)}</p>
+    </div>
+  );
+}
+
+function formatCardNumber(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 19);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+
+function formatExpiry(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+function detectBrand(value: string): string {
+  const d = value.replace(/\D/g, "");
+  if (!d) return "";
+  if (/^4/.test(d)) return "Visa";
+  if (/^(5[1-5]|2[2-7])/.test(d)) return "Mastercard";
+  if (/^3[47]/.test(d)) return "Amex";
+  if (/^6/.test(d)) return "Discover";
+  return "";
+}
+
+function QuickPick({
+  onPick,
+  onClear,
+  selectedCount,
+  remaining,
+  locale,
+}: {
+  onPick: (n: number) => void;
+  onClear: () => void;
+  selectedCount: number;
+  remaining: number;
+  locale: Locale;
+}) {
+  const presets = [1, 2, 4, 6].filter((n) => n <= remaining);
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3">
+      <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+        {t("seats.quick-pick", locale)}
+      </span>
+      <div className="flex flex-wrap gap-1.5">
+        {presets.map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onPick(n)}
+            className="press rounded-full border border-sfc-n-200 bg-sfc-bone px-3 py-1 text-xs font-semibold text-sfc-n-700 transition hover:border-sfc-navy hover:bg-white hover:text-sfc-navy"
+          >
+            {t("seats.together", locale, { n })}
+          </button>
+        ))}
+      </div>
+      <span className="ms-auto text-xs text-stone-500">
+        {selectedCount > 0 ? (
+          <button
+            type="button"
+            onClick={onClear}
+            className="font-medium text-stone-700 hover:text-red-600 hover:underline"
+          >
+            {t("seats.clear", locale, { n: selectedCount })}
+          </button>
+        ) : (
+          <>{t("seats.or-individually", locale)}</>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function MobileCheckoutBar({
+  count,
+  total,
+  disabled,
+  currency,
+  locale,
+}: {
+  count: number;
+  total: number;
+  disabled: boolean;
+  currency: Currency;
+  locale: Locale;
+}) {
+  return (
+    <div
+      aria-hidden={count === 0}
+      className={`fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-md transition-transform duration-300 lg:hidden ${
+        count === 0
+          ? "pointer-events-none translate-y-full opacity-0"
+          : "translate-y-0 opacity-100 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)]"
+      }`}
+    >
+      <div className="mx-auto flex max-w-md items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+            {t("pay.mobile-cta-line", locale, {
+              n: count,
+              seats: count === 1 ? t("common.seat", locale) : t("common.seats", locale),
+              amount: formatMoney(total, currency),
+            })}
+          </div>
+          <div className="truncate text-xs text-stone-500">
+            {t("pay.mobile-cta-sub", locale)}
+          </div>
+        </div>
+        <a
+          href="#checkout"
+          className={`sfc-btn sfc-btn--primary sfc-btn--sm press ${
+            disabled ? "pointer-events-none opacity-60" : ""
+          }`}
+        >
+          {t("common.continue", locale)}
+        </a>
+      </div>
     </div>
   );
 }
@@ -598,13 +793,18 @@ function PayButton({
   method,
   total,
   disabled,
+  currency,
+  locale,
 }: {
   method: PaymentMethod;
   total: number;
   disabled: boolean;
+  currency: Currency;
+  locale: Locale;
 }) {
   const { pending } = useFormStatus();
   const isDisabled = disabled || pending;
+  const amount = formatMoney(total, currency);
 
   if (method === "apple") {
     return (
@@ -614,11 +814,11 @@ function PayButton({
         className="press inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-base font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
       >
         {pending ? (
-          <PendingLabel text="Authorising on device…" />
+          <PendingLabel text={t("pay.pending.apple", locale)} />
         ) : (
           <>
             <AppleMark />
-            <span>Pay · {formatMoney(total)}</span>
+            <span>{t("pay.button.apple-pay", locale, { amount })}</span>
           </>
         )}
       </button>
@@ -632,11 +832,11 @@ function PayButton({
         className="press inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-base font-semibold text-stone-900 ring-1 ring-stone-300 transition hover:bg-stone-50 hover:shadow-md disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
       >
         {pending ? (
-          <PendingLabel text="Confirming with Google…" tone="dark" />
+          <PendingLabel text={t("pay.pending.google", locale)} tone="dark" />
         ) : (
           <>
             <GMark />
-            <span>Pay · {formatMoney(total)}</span>
+            <span>{t("pay.button.google-pay", locale, { amount })}</span>
           </>
         )}
       </button>
@@ -646,12 +846,12 @@ function PayButton({
     <button
       type="submit"
       disabled={isDisabled}
-      className="press inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-base font-semibold text-white shadow-[0_8px_24px_-12px_rgba(16,185,129,0.7)] transition hover:bg-emerald-700 hover:shadow-[0_10px_28px_-12px_rgba(16,185,129,0.8)] disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
+      className="sfc-btn sfc-btn--primary press w-full disabled:cursor-not-allowed disabled:bg-sfc-n-300 disabled:shadow-none"
     >
       {pending ? (
-        <PendingLabel text="Processing payment…" />
+        <PendingLabel text={t("pay.pending.card", locale)} />
       ) : (
-        <span>Pay {formatMoney(total)} with card</span>
+        <span>{t("pay.button.card", locale, { amount })}</span>
       )}
     </button>
   );

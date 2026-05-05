@@ -88,3 +88,34 @@ export function seatPrice(id: string, basePrice: number): number {
 }
 
 export const SEAT_PX = 24; // base seat unit
+
+// Find a contiguous run of `count` free seats. Scans stands in priority order
+// (Main Stand → East → North → South), front rows first, left to right.
+export function findAdjacentSeats(
+  count: number,
+  taken: Set<string>,
+): string[] {
+  if (count <= 0) return [];
+  for (const stand of STANDS) {
+    for (let r = 0; r < stand.rows; r++) {
+      const row = rowLetter(r);
+      let runStart = 1;
+      let runLen = 0;
+      for (let c = 1; c <= stand.cols; c++) {
+        const id = seatId(stand.id, row, c);
+        if (taken.has(id)) {
+          runStart = c + 1;
+          runLen = 0;
+          continue;
+        }
+        runLen++;
+        if (runLen >= count) {
+          return Array.from({ length: count }, (_, i) =>
+            seatId(stand.id, row, runStart + i),
+          );
+        }
+      }
+    }
+  }
+  return [];
+}

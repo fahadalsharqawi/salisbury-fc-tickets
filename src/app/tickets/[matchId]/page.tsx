@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrency } from "@/lib/currency";
 import { getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
+import { localize, t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
 import { MAIN_STAND_SURCHARGE } from "@/lib/seats";
 import BookingForm from "./BookingForm";
 
@@ -19,58 +22,90 @@ export default async function BookingFormPage({
 }) {
   const { matchId } = await params;
   const { error } = await searchParams;
+  const currency = await getCurrency();
+  const locale = await getLocale();
   const match = await getMatch(matchId);
   if (!match) notFound();
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <Link href="/tickets" className="text-sm text-emerald-700 hover:underline">
-        ← Back to fixtures
-      </Link>
-
-      <header className="anim-fade-up mt-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide">
-            <span
-              className={
-                match.isHome
-                  ? "rounded-full bg-stone-900 px-2 py-0.5 text-white"
-                  : "rounded-full border border-stone-300 px-2 py-0.5 text-stone-700"
-              }
-            >
-              {match.isHome ? "Home" : "Away"}
-            </span>
-            <span className="text-stone-500">{match.competition}</span>
+    <>
+      {/* Page strip */}
+      <div className="bg-sfc-navy text-white">
+        <div className="sfc-container py-6">
+          <Link
+            href="/tickets"
+            className="sfc-display text-[12px] font-semibold uppercase tracking-[0.14em] text-sfc-sky-light hover:text-white"
+          >
+            {t("form.back-to-fixtures", locale)}
+          </Link>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="sfc-eyebrow sfc-eyebrow--on-dark flex items-center gap-2">
+                <span
+                  className={
+                    match.isHome
+                      ? "bg-white px-2 py-0.5 text-sfc-navy"
+                      : "border border-white/40 px-2 py-0.5 text-white"
+                  }
+                >
+                  {match.isHome ? t("common.home", locale) : t("common.away", locale)}
+                </span>
+                <span className="text-sfc-sky-light">
+                  {localize(match.competition, locale)}
+                </span>
+              </div>
+              <h1 className="sfc-display mt-2 text-3xl font-bold leading-[1.05] sm:text-4xl">
+                {t("brand.name", locale)}{" "}
+                <span className="text-sfc-sky-light">{t("common.vs", locale)}</span>{" "}
+                {localize(match.opponent, locale)}
+              </h1>
+              <p className="mt-1 text-sm text-sfc-sky-light">
+                {formatLongKickoff(match.kickoff)}
+              </p>
+              <p className="text-sm text-sfc-sky-light/80">
+                {localize(match.venue, locale)}
+              </p>
+            </div>
+            <div className="text-end">
+              <div className="sfc-eyebrow sfc-eyebrow--on-dark">
+                {t("common.from", locale)}
+              </div>
+              <div className="sfc-display mt-1 text-3xl font-bold leading-none">
+                {formatMoney(match.pricePerSeat, currency)}{" "}
+                <span className="text-base font-normal text-sfc-sky-light">
+                  {t("form.from-per-seat", locale)}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-sfc-sky-light/80">
+                {t("form.main-stand-extra", locale, {
+                  amount: formatMoney(MAIN_STAND_SURCHARGE, currency),
+                })}
+              </div>
+            </div>
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            Salisbury FC <span className="text-stone-400">vs</span> {match.opponent}
-          </h1>
-          <p className="mt-1 text-stone-600">{formatLongKickoff(match.kickoff)}</p>
-          <p className="text-stone-500">{match.venue}</p>
         </div>
-        <div className="text-right">
-          <div className="text-xs font-medium uppercase tracking-wide text-stone-500">
-            From
-          </div>
-          <div className="text-2xl font-semibold">
-            {formatMoney(match.pricePerSeat)}{" "}
-            <span className="text-base font-normal text-stone-500">/ seat</span>
-          </div>
-          <div className="text-xs text-stone-500">
-            Main Stand seats {formatMoney(MAIN_STAND_SURCHARGE)} extra (stand transfer)
-          </div>
-        </div>
-      </header>
-
-      {match.notes && (
-        <div className="mt-5 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700">
-          {match.notes}
-        </div>
-      )}
-
-      <div className="mt-8">
-        <BookingForm match={match} error={error} />
       </div>
-    </div>
+
+      <div className="sfc-container py-10">
+        {match.notes && (
+          <div className="mb-6 rounded-xl border border-sfc-n-200 bg-sfc-bone px-4 py-3 text-sm text-sfc-n-700">
+            {localize(match.notes, locale)}
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <BookingForm
+          match={match}
+          error={error}
+          currency={currency}
+          locale={locale}
+        />
+      </div>
+    </>
   );
 }

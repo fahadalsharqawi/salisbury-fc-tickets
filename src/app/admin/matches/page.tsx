@@ -1,6 +1,9 @@
 import { createMatchAction, deleteMatchAction } from "@/lib/actions";
+import { getCurrency } from "@/lib/currency";
 import { listMatches } from "@/lib/db";
 import { dateInput, formatKickoff, formatMoney, timeInput } from "@/lib/format";
+import { localize, t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +15,8 @@ export default async function AdminMatchesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { error, ok } = await searchParams;
+  const currency = await getCurrency();
+  const locale = await getLocale();
   const matches = await listMatches({ upcomingOnly: true });
 
   const todayDate = new Date();
@@ -21,10 +26,8 @@ export default async function AdminMatchesPage({
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-xl font-semibold">Fixtures</h2>
-        <p className="text-sm text-stone-500">
-          Add upcoming matches, monitor sales, and remove unbooked fixtures.
-        </p>
+        <h2 className="text-xl font-semibold">{t("admin.fixtures-title", locale)}</h2>
+        <p className="text-sm text-stone-500">{t("admin.fixtures-subtitle", locale)}</p>
       </header>
 
       {error && (
@@ -34,53 +37,53 @@ export default async function AdminMatchesPage({
       )}
       {ok && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Fixture added.
+          {t("admin.fixture-added", locale)}
         </div>
       )}
 
       <section className="rounded-2xl border border-stone-200 bg-white p-6">
-        <h3 className="font-semibold">New fixture</h3>
+        <h3 className="font-semibold">{t("admin.new-fixture", locale)}</h3>
         <form
           action={createMatchAction}
           className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          <Field label="Opponent" name="opponent" required placeholder="e.g. Truro City" />
+          <Field label={t("admin.field.opponent", locale)} name="opponent" required placeholder="Truro City" />
           <Field
-            label="Competition"
+            label={t("admin.field.competition", locale)}
             name="competition"
             required
-            placeholder="Southern League Premier South"
+            placeholder="National League South"
           />
-          <Field label="Venue" name="venue" required placeholder="Raymond McEnhill Stadium" />
-          <Field label="Date" name="date" type="date" required defaultValue={defaultDate} />
-          <Field label="Kick-off" name="time" type="time" required defaultValue="15:00" />
+          <Field label={t("admin.field.venue", locale)} name="venue" required placeholder="Raymond McEnhill Stadium" />
+          <Field label={t("admin.field.date", locale)} name="date" type="date" required defaultValue={defaultDate} />
+          <Field label={t("admin.field.kickoff", locale)} name="time" type="time" required defaultValue="15:00" />
           <Field
-            label="Price per seat (£)"
+            label={t("admin.field.price", locale)}
             name="pricePerSeat"
             type="number"
             min={1}
             step="1"
             required
-            defaultValue="12"
+            defaultValue="17"
           />
           <label className="block text-sm font-medium text-stone-700">
-            Venue type
+            {t("admin.field.venue-type", locale)}
             <select
               name="isHome"
               defaultValue="home"
               className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             >
-              <option value="home">Home</option>
-              <option value="away">Away</option>
+              <option value="home">{t("common.home", locale)}</option>
+              <option value="away">{t("common.away", locale)}</option>
             </select>
           </label>
-          <Field label="Notes" name="notes" placeholder="(optional)" />
+          <Field label={t("admin.field.notes", locale)} name="notes" placeholder={t("admin.optional", locale)} />
           <div className="flex items-end">
             <button
               type="submit"
               className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
             >
-              Add fixture
+              {t("admin.add-fixture", locale)}
             </button>
           </div>
         </form>
@@ -88,19 +91,21 @@ export default async function AdminMatchesPage({
 
       <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
         <header className="border-b border-stone-200 px-5 py-4">
-          <h3 className="font-semibold">Upcoming fixtures</h3>
+          <h3 className="font-semibold">{t("admin.upcoming-fixtures-list", locale)}</h3>
         </header>
         {matches.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-stone-500">No fixtures yet.</div>
+          <div className="px-5 py-10 text-center text-sm text-stone-500">
+            {t("admin.no-fixtures", locale)}
+          </div>
         ) : (
           <table className="min-w-full text-sm">
-            <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
+            <thead className="bg-stone-50 text-start text-xs font-semibold uppercase tracking-wide text-stone-500">
               <tr>
-                <th className="px-5 py-3">Match</th>
-                <th className="px-5 py-3">Kick-off</th>
-                <th className="px-5 py-3">Venue</th>
-                <th className="px-5 py-3">Sold</th>
-                <th className="px-5 py-3">Price</th>
+                <th className="px-5 py-3 text-start">{t("admin.col.match", locale)}</th>
+                <th className="px-5 py-3 text-start">{t("admin.col.kickoff", locale)}</th>
+                <th className="px-5 py-3 text-start">{t("admin.col.venue", locale)}</th>
+                <th className="px-5 py-3 text-start">{t("admin.col.sold", locale)}</th>
+                <th className="px-5 py-3 text-start">{t("admin.col.price", locale)}</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>
@@ -108,16 +113,20 @@ export default async function AdminMatchesPage({
               {matches.map((m) => (
                 <tr key={m.id} className="hover:bg-stone-50">
                   <td className="px-5 py-3">
-                    <div className="font-medium">vs {m.opponent}</div>
-                    <div className="text-xs text-stone-500">{m.competition}</div>
+                    <div className="font-medium">
+                      {t("common.vs", locale)} {localize(m.opponent, locale)}
+                    </div>
+                    <div className="text-xs text-stone-500">{localize(m.competition, locale)}</div>
                     <div className="hidden text-xs text-stone-400">
                       {dateInput(m.kickoff)} {timeInput(m.kickoff)}
                     </div>
                   </td>
                   <td className="px-5 py-3">{formatKickoff(m.kickoff)}</td>
                   <td className="px-5 py-3">
-                    <div>{m.venue}</div>
-                    <div className="text-xs text-stone-500">{m.isHome ? "Home" : "Away"}</div>
+                    <div>{localize(m.venue, locale)}</div>
+                    <div className="text-xs text-stone-500">
+                      {m.isHome ? t("common.home", locale) : t("common.away", locale)}
+                    </div>
                   </td>
                   <td className="px-5 py-3">
                     <span
@@ -132,8 +141,8 @@ export default async function AdminMatchesPage({
                       {m.ticketsSold} / {m.capacity}
                     </span>
                   </td>
-                  <td className="px-5 py-3">{formatMoney(m.pricePerSeat)}</td>
-                  <td className="px-5 py-3 text-right">
+                  <td className="px-5 py-3">{formatMoney(m.pricePerSeat, currency)}</td>
+                  <td className="px-5 py-3 text-end">
                     <form action={deleteMatchAction}>
                       <input type="hidden" name="id" value={m.id} />
                       <button
@@ -141,12 +150,10 @@ export default async function AdminMatchesPage({
                         className="text-sm font-medium text-red-600 hover:underline disabled:opacity-40"
                         disabled={m.ticketsSold > 0}
                         title={
-                          m.ticketsSold > 0
-                            ? "Cancel bookings before deleting"
-                            : undefined
+                          m.ticketsSold > 0 ? t("admin.cancel-bookings-first", locale) : undefined
                         }
                       >
-                        Delete
+                        {t("admin.delete", locale)}
                       </button>
                     </form>
                   </td>

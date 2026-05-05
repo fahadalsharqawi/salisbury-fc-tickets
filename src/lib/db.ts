@@ -9,7 +9,7 @@ const DB_PATH = path.join(DATA_DIR, "db.json");
 
 let writeQueue: Promise<unknown> = Promise.resolve();
 
-const HOME_GROUND = "Raymond McEnhill Stadium";
+const HOME_GROUND = "Raymond McEnhill Stadium, Old Sarum";
 
 function nextWeekday(target: number, weeksAhead: number): Date {
   const d = new Date();
@@ -29,7 +29,7 @@ function buildSeed(): DB {
   const fixtures: Omit<Match, "id">[] = [
     {
       opponent: "Truro City",
-      competition: "Southern League Premier South",
+      competition: "National League South",
       kickoff: withTime(nextWeekday(6, 0), 15, 0),
       venue: HOME_GROUND,
       isHome: true,
@@ -37,24 +37,24 @@ function buildSeed(): DB {
       notes: "Adult £17 · Concessions £13 · Age 5–17 £6 · Under 5 free.",
     },
     {
-      opponent: "Hartley Wintney",
-      competition: "Southern League Premier South",
+      opponent: "Hemel Hempstead Town",
+      competition: "National League South",
       kickoff: withTime(nextWeekday(2, 0), 19, 45),
-      venue: "Memorial Ground, Hartley Wintney",
+      venue: "Vauxhall Road, Hemel Hempstead",
       isHome: false,
-      pricePerSeat: 12,
+      pricePerSeat: 14,
       notes: "Away allocation — collect at the away turnstile.",
     },
     {
-      opponent: "AFC Totton",
-      competition: "Southern League Premier South",
+      opponent: "Eastbourne Borough",
+      competition: "National League South",
       kickoff: withTime(nextWeekday(6, 1), 15, 0),
       venue: HOME_GROUND,
       isHome: true,
       pricePerSeat: 17,
     },
     {
-      opponent: "Plymouth Parkway",
+      opponent: "Worthing",
       competition: "FA Trophy — Third Round",
       kickoff: withTime(nextWeekday(2, 1), 19, 45),
       venue: HOME_GROUND,
@@ -64,15 +64,15 @@ function buildSeed(): DB {
     },
     {
       opponent: "Farnborough",
-      competition: "Southern League Premier South",
+      competition: "National League South",
       kickoff: withTime(nextWeekday(6, 2), 15, 0),
       venue: "Cherrywood Road, Farnborough",
       isHome: false,
-      pricePerSeat: 13,
+      pricePerSeat: 14,
     },
     {
-      opponent: "Bracknell Town",
-      competition: "Southern League Premier South",
+      opponent: "Slough Town",
+      competition: "National League South",
       kickoff: withTime(nextWeekday(6, 3), 15, 0),
       venue: HOME_GROUND,
       isHome: true,

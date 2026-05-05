@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { setBookingStatusAction } from "@/lib/actions";
+import { getCurrency } from "@/lib/currency";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
+import { localize, t, type Locale } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +17,8 @@ export default async function AdminBookingDetail({
   params: Promise<Params>;
 }) {
   const { id } = await params;
+  const currency = await getCurrency();
+  const locale = await getLocale();
   const booking = await getBooking(id);
   if (!booking) notFound();
   const match = await getMatch(booking.matchId);
@@ -22,7 +27,7 @@ export default async function AdminBookingDetail({
   return (
     <div className="space-y-6">
       <Link href="/admin/bookings" className="text-sm text-emerald-700 hover:underline">
-        ← All bookings
+        {t("admin.all-bookings", locale)}
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -30,31 +35,37 @@ export default async function AdminBookingDetail({
           <section className="rounded-2xl border border-stone-200 bg-white p-6">
             <div className="flex items-start justify-between">
               <div>
-                <Label>Booking</Label>
-                <div className="mt-1 font-mono text-sm">
+                <Label>{t("admin.booking-eyebrow", locale)}</Label>
+                <div className="mt-1 font-mono text-sm" dir="ltr">
                   #{booking.id.slice(0, 8).toUpperCase()}
                 </div>
                 <h2 className="mt-3 text-2xl font-semibold">{booking.customerName}</h2>
-                <div className="mt-1 text-sm text-stone-600">
+                <div className="mt-1 text-sm text-stone-600" dir="ltr">
                   {booking.email} · {booking.phone}
                 </div>
               </div>
-              <StatusPill status={booking.status} />
+              <StatusPill status={booking.status} locale={locale} />
             </div>
 
             <hr className="my-5 border-stone-200" />
 
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
-              <Row label="Tickets" value={`${booking.seats.length}`} />
-              <Row label="Total" value={match ? formatMoney(total) : "—"} />
-              <Row label="Payment" value={paymentLabel(booking.paymentMethod)} />
-              <Row label="Created" value={new Date(booking.createdAt).toLocaleString()} />
-              <Row label="Match" value={match ? `vs ${match.opponent}` : "deleted"} />
+              <Row label={t("admin.row.tickets", locale)} value={`${booking.seats.length}`} />
+              <Row label={t("admin.row.total", locale)} value={match ? formatMoney(total, currency) : "—"} />
+              <Row label={t("admin.row.payment", locale)} value={paymentLabel(booking.paymentMethod, locale)} />
+              <Row
+                label={t("admin.row.created", locale)}
+                value={new Date(booking.createdAt).toLocaleString(locale === "ar" ? "ar" : undefined)}
+              />
+              <Row
+                label={t("admin.row.match", locale)}
+                value={match ? `${t("common.vs", locale)} ${localize(match.opponent, locale)}` : t("admin.deleted", locale)}
+              />
             </dl>
 
             <div className="mt-5">
-              <Label>Seats</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <Label>{t("confirm.seats", locale)}</Label>
+              <div className="mt-2 flex flex-wrap gap-2" dir="ltr">
                 {booking.seats.map((s) => (
                   <span
                     key={s}
@@ -68,7 +79,7 @@ export default async function AdminBookingDetail({
 
             {booking.notes && (
               <div className="mt-5 rounded-lg bg-stone-50 p-4 text-sm text-stone-700">
-                <Label>Notes</Label>
+                <Label>{t("common.notes", locale)}</Label>
                 <div className="mt-1">{booking.notes}</div>
               </div>
             )}
@@ -76,24 +87,26 @@ export default async function AdminBookingDetail({
 
           {match && (
             <section className="rounded-2xl border border-stone-200 bg-white p-6">
-              <Label>Match</Label>
+              <Label>{t("common.match", locale)}</Label>
               <div className="mt-1 text-lg font-semibold">
-                Salisbury FC <span className="text-stone-400">vs</span> {match.opponent}
+                {t("brand.name", locale)}{" "}
+                <span className="text-stone-400">{t("common.vs", locale)}</span>{" "}
+                {localize(match.opponent, locale)}
               </div>
-              <div className="text-stone-600">{match.competition}</div>
+              <div className="text-stone-600">{localize(match.competition, locale)}</div>
               <div className="mt-1 text-stone-600">{formatLongKickoff(match.kickoff)}</div>
-              <div className="text-stone-600">{match.venue}</div>
+              <div className="text-stone-600">{localize(match.venue, locale)}</div>
             </section>
           )}
         </div>
 
         <aside className="space-y-3 rounded-2xl border border-stone-200 bg-white p-6">
-          <Label>Update status</Label>
+          <Label>{t("admin.update-status", locale)}</Label>
           <StatusForm id={booking.id} target="confirmed" disabled={booking.status === "confirmed"}>
-            Mark confirmed
+            {t("admin.mark-confirmed", locale)}
           </StatusForm>
           <StatusForm id={booking.id} target="pending" disabled={booking.status === "pending"}>
-            Mark pending
+            {t("admin.mark-pending", locale)}
           </StatusForm>
           <StatusForm
             id={booking.id}
@@ -101,7 +114,7 @@ export default async function AdminBookingDetail({
             disabled={booking.status === "cancelled"}
             variant="danger"
           >
-            Cancel booking
+            {t("admin.cancel-booking", locale)}
           </StatusForm>
         </aside>
       </div>
@@ -156,11 +169,21 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
-function paymentLabel(m: "card" | "apple" | "google"): string {
-  return m === "apple" ? "Apple Pay" : m === "google" ? "Google Pay" : "Card";
+function paymentLabel(m: "card" | "apple" | "google", locale: Locale): string {
+  return m === "apple"
+    ? t("pay.tab.apple", locale)
+    : m === "google"
+      ? t("pay.tab.google", locale)
+      : t("pay.tab.card", locale);
 }
 
-function StatusPill({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
+function StatusPill({
+  status,
+  locale,
+}: {
+  status: "pending" | "confirmed" | "cancelled";
+  locale: Locale;
+}) {
   const styles =
     status === "confirmed"
       ? "bg-emerald-100 text-emerald-800"
@@ -168,8 +191,8 @@ function StatusPill({ status }: { status: "pending" | "confirmed" | "cancelled" 
         ? "bg-amber-100 text-amber-800"
         : "bg-stone-200 text-stone-600";
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${styles}`}>
-      {status}
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles}`}>
+      {t(`admin.status.${status}`, locale)}
     </span>
   );
 }

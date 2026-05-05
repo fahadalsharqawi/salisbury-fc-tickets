@@ -1,264 +1,292 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Salisbury FC design system tokens ────────────────────────── */
+
+@theme {
+  /* Brand */
+  --color-sfc-navy:        #1F4A6B;
+  --color-sfc-navy-deep:   #15324A;
+  --color-sfc-navy-darker: #0C2236;
+  --color-sfc-sky:         #6898C8;
+  --color-sfc-sky-light:   #B8D4E8;
+  --color-sfc-bone:        #F6F7F9;
+  --color-sfc-pitch:       #4F8534;
+  --color-sfc-pitch-deep:  #355C22;
+  --color-sfc-ink:         #0C1620;
+
+  /* Neutrals */
+  --color-sfc-n-50:  #F6F7F9;
+  --color-sfc-n-100: #ECEEF2;
+  --color-sfc-n-200: #D9DEE5;
+  --color-sfc-n-300: #B6BFCB;
+  --color-sfc-n-400: #8A95A3;
+  --color-sfc-n-500: #5E6A78;
+  --color-sfc-n-600: #404D5C;
+  --color-sfc-n-700: #2A3441;
+  --color-sfc-n-800: #18202B;
+  --color-sfc-n-900: #0C1620;
+
+  /* Semantic */
+  --color-sfc-win:  #2E7D32;
+  --color-sfc-draw: #B58A2A;
+  --color-sfc-loss: #B33A2E;
+  --color-sfc-live: #D9342B;
+
+  /* Fonts (consumed by Tailwind font-* utilities) */
+  --font-sans: var(--font-inter), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+/* ─── Non-Tailwind tokens (motion, shadows, type families) ─────── */
+
+:root {
+  --ff-display: var(--font-manrope), var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ff-body: var(--font-inter), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  --sh-1: 0 1px 2px rgba(12,22,54,0.06), 0 1px 1px rgba(12,22,54,0.04);
+  --sh-2: 0 4px 12px rgba(12,22,54,0.08), 0 1px 2px rgba(12,22,54,0.05);
+  --sh-3: 0 12px 32px rgba(12,22,54,0.14), 0 2px 6px rgba(12,22,54,0.06);
+}
+
+/* ─── Base element styles ──────────────────────────────────────── */
+
+html { color-scheme: light; }
 
 body {
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--ff-body);
+  color: var(--color-sfc-ink);
+  background: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* --- Payment-success check animation (used on /booking/[id]) --- */
+/* Display headings — Manrope ExtraBold, sentence case. Modern editorial. */
+.sfc-display {
+  font-family: var(--ff-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+
+[dir="rtl"] .sfc-display {
+  font-family: var(--ff-body);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+}
+
+.sfc-eyebrow {
+  font-family: var(--ff-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-sfc-navy);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.sfc-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  flex: none;
+}
+
+[dir="rtl"] .sfc-eyebrow {
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.sfc-eyebrow--on-dark { color: var(--color-sfc-sky-light); }
+
+/* Buttons — modern pill */
+.sfc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--ff-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+.sfc-btn:active { transform: translateY(1px); }
+.sfc-btn--primary {
+  background: var(--color-sfc-navy);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(31,74,107,0.45);
+}
+.sfc-btn--primary:hover { background: var(--color-sfc-navy-deep); color: #fff; box-shadow: 0 6px 18px -4px rgba(31,74,107,0.55); }
+/* Kept as a class name for back-compat; styled like primary navy now (no red). */
+.sfc-btn--live {
+  background: var(--color-sfc-navy);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(31,74,107,0.45);
+}
+.sfc-btn--live:hover { background: var(--color-sfc-navy-deep); color: #fff; box-shadow: 0 6px 18px -4px rgba(31,74,107,0.55); }
+.sfc-btn--ghost {
+  background: transparent;
+  color: var(--color-sfc-navy);
+  border: 1.5px solid color-mix(in srgb, var(--color-sfc-navy) 35%, transparent);
+  padding: 10.5px 20.5px;
+}
+.sfc-btn--ghost:hover { background: var(--color-sfc-navy); color: #fff; border-color: var(--color-sfc-navy); }
+.sfc-btn--ghost-on-dark {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  padding: 10.5px 20.5px;
+  backdrop-filter: blur(8px);
+}
+.sfc-btn--ghost-on-dark:hover { background: #fff; color: var(--color-sfc-navy); border-color: #fff; }
+.sfc-btn--sm { padding: 8px 16px; font-size: 12.5px; }
+
+/* Modern card surfaces */
+.sfc-card {
+  background: #fff;
+  border: 1px solid var(--color-sfc-n-200);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.sfc-card-photo:first-child { border-radius: 16px 16px 0 0; overflow: hidden; }
+
+/* Form pill — last-5 W/D/L circles */
+.sfc-form-chip {
+  width: 28px; height: 28px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-family: var(--ff-display); font-weight: 700; font-size: 13px;
+  letter-spacing: 0;
+}
+.sfc-form-chip--W { background: var(--color-sfc-win); }
+.sfc-form-chip--D { background: var(--color-sfc-draw); }
+.sfc-form-chip--L { background: var(--color-sfc-loss); }
+
+.sfc-container {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.sfc-section { padding-block: 48px; }
+.sfc-section--alt { background: var(--color-sfc-bone); }
+
+::selection { background: var(--color-sfc-sky); color: var(--color-sfc-navy-darker); }
+
+/* ─── Payment-success check (used on /booking/[id]) ────────────── */
 
 @keyframes pay-pop {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
-
 @keyframes pay-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+  to { stroke-dashoffset: 0; }
 }
-
 @keyframes pay-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
+  0%   { transform: scale(0.6); opacity: 0.55; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
-
 @keyframes pay-fade-up {
-  from {
-    transform: translateY(6px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
 
-.pay-success {
-  position: relative;
-  width: 7rem;
-  height: 7rem;
-  margin-inline: auto;
-}
-
+.pay-success { position: relative; width: 7rem; height: 7rem; margin-inline: auto; }
 .pay-success__circle {
   transform-origin: 40px 40px;
   animation: pay-pop 0.55s cubic-bezier(0.2, 0.8, 0.25, 1.2) both;
 }
-
 .pay-success__check {
   stroke-dasharray: 60;
   stroke-dashoffset: 60;
   animation: pay-draw 0.45s 0.38s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
-
 .pay-success__ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: rgba(16, 185, 129, 0.4);
-  transform: scale(0.6);
-  opacity: 0;
+  position: absolute; inset: 0; border-radius: 9999px;
+  background: rgba(79, 133, 52, 0.4);
+  transform: scale(0.6); opacity: 0;
   animation: pay-ring 1.1s ease-out 0.4s 1 both;
 }
+.pay-success__ring--two { animation-delay: 0.65s; background: rgba(79, 133, 52, 0.25); }
+.pay-success-text { opacity: 0; animation: pay-fade-up 0.45s 0.85s ease-out forwards; }
 
-.pay-success__ring--two {
-  animation-delay: 0.65s;
-  background: rgba(16, 185, 129, 0.25);
-}
-
-.pay-success-text {
-  opacity: 0;
-  animation: pay-fade-up 0.45s 0.85s ease-out forwards;
-}
-
-/* --- Global entry / interaction animations --- */
+/* ─── Global entry / interaction animations ────────────────────── */
 
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
+@keyframes fade-in    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in   { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 @keyframes slide-from-right {
-  from {
-    opacity: 0;
-    transform: translate3d(24px, 0, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+  from { opacity: 0; transform: translate3d(24px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-
 @keyframes drop-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, -10px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+  from { opacity: 0; transform: translate3d(0, -10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-@keyframes shimmer {
-  from {
-    background-position: -200% 0;
-  }
-  to {
-    background-position: 200% 0;
-  }
-}
+.anim-fade-up    { opacity: 0; animation: fade-up    0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: var(--anim-delay, 0ms); }
+.anim-fade-in    { opacity: 0; animation: fade-in    0.45s ease-out                       forwards; animation-delay: var(--anim-delay, 0ms); }
+.anim-scale-in   { opacity: 0; animation: scale-in   0.5s  cubic-bezier(0.2, 0.8, 0.25, 1.05) forwards; animation-delay: var(--anim-delay, 0ms); }
+.anim-slide-right{ opacity: 0; animation: slide-from-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: var(--anim-delay, 0ms); }
+.anim-drop-in    { opacity: 0; animation: drop-in    0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: var(--anim-delay, 0ms); }
 
-@keyframes spin-slow {
-  to {
-    transform: rotate(360deg);
-  }
-}
+.stagger > *:nth-child(1)  { --anim-delay:  0ms; }
+.stagger > *:nth-child(2)  { --anim-delay:  70ms; }
+.stagger > *:nth-child(3)  { --anim-delay: 140ms; }
+.stagger > *:nth-child(4)  { --anim-delay: 210ms; }
+.stagger > *:nth-child(5)  { --anim-delay: 280ms; }
+.stagger > *:nth-child(6)  { --anim-delay: 350ms; }
+.stagger > *:nth-child(7)  { --anim-delay: 420ms; }
+.stagger > *:nth-child(8)  { --anim-delay: 490ms; }
+.stagger > *:nth-child(9)  { --anim-delay: 560ms; }
+.stagger > *:nth-child(10) { --anim-delay: 630ms; }
 
-.anim-fade-up {
-  opacity: 0;
-  animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--anim-delay, 0ms);
-}
-
-.anim-fade-in {
-  opacity: 0;
-  animation: fade-in 0.45s ease-out forwards;
-  animation-delay: var(--anim-delay, 0ms);
-}
-
-.anim-scale-in {
-  opacity: 0;
-  animation: scale-in 0.5s cubic-bezier(0.2, 0.8, 0.25, 1.05) forwards;
-  animation-delay: var(--anim-delay, 0ms);
-}
-
-.anim-slide-right {
-  opacity: 0;
-  animation: slide-from-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--anim-delay, 0ms);
-}
-
-.anim-drop-in {
-  opacity: 0;
-  animation: drop-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--anim-delay, 0ms);
-}
-
-/* Stagger helpers — apply on a parent to delay children based on order */
-.stagger > *:nth-child(1) {
-  --anim-delay: 0ms;
-}
-.stagger > *:nth-child(2) {
-  --anim-delay: 70ms;
-}
-.stagger > *:nth-child(3) {
-  --anim-delay: 140ms;
-}
-.stagger > *:nth-child(4) {
-  --anim-delay: 210ms;
-}
-.stagger > *:nth-child(5) {
-  --anim-delay: 280ms;
-}
-.stagger > *:nth-child(6) {
-  --anim-delay: 350ms;
-}
-.stagger > *:nth-child(7) {
-  --anim-delay: 420ms;
-}
-.stagger > *:nth-child(8) {
-  --anim-delay: 490ms;
-}
-.stagger > *:nth-child(9) {
-  --anim-delay: 560ms;
-}
-.stagger > *:nth-child(10) {
-  --anim-delay: 630ms;
-}
-
-/* Subtle hover lift for interactive cards */
+/* News card lift (square corners + navy underline accent on hover) */
 .lift {
   transition:
-    transform 0.25s cubic-bezier(0.2, 0.8, 0.25, 1),
-    box-shadow 0.25s ease,
-    border-color 0.2s ease;
+    transform var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
 }
 .lift:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 20px -8px rgba(15, 23, 42, 0.18),
-    0 2px 6px -2px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+  box-shadow: var(--sh-2);
+  border-color: var(--color-sfc-navy);
 }
 
-/* Subtle press for buttons */
 .press {
   transition:
-    transform 0.12s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+    transform var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    background-color var(--dur-base) var(--ease-standard);
 }
-.press:active {
-  transform: translateY(1px) scale(0.99);
-}
+.press:active { transform: translateY(1px); }
 
-/* Smooth scroll for anchor jumps */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-/* Reduce motion respectfully */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-delay: 0ms !important;
     transition-duration: 0.001ms !important;
