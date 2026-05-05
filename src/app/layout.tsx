@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
+import { signOutAction } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,11 +64,18 @@ const SOCIALS = [
   },
 ] as const;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const displayName =
+    (user?.user_metadata?.name as string | undefined) ?? user?.email ?? null;
+
   return (
     <html
       lang="en"
@@ -104,6 +113,31 @@ export default function RootLayout({
               >
                 Admin
               </Link>
+              {user ? (
+                <div className="flex items-center gap-2 pl-2">
+                  <span
+                    className="hidden max-w-[160px] truncate text-xs text-stone-500 sm:inline"
+                    title={displayName ?? undefined}
+                  >
+                    {displayName}
+                  </span>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="rounded-md px-3 py-2 font-medium text-stone-700 hover:bg-stone-100"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link
+                  href="/sign-in"
+                  className="rounded-md px-3 py-2 font-medium text-stone-700 hover:bg-stone-100"
+                >
+                  Sign in
+                </Link>
+              )}
             </nav>
           </div>
         </header>

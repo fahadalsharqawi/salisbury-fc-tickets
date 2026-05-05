@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getStats, listBookings, listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
+import type { BookingStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -128,12 +129,12 @@ function Stat({
   );
 }
 
-function StatusPill({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
+function StatusPill({ status }: { status: BookingStatus }) {
   const styles =
     status === "confirmed"
       ? "bg-emerald-100 text-emerald-800"
-      : status === "pending"
-        ? "bg-amber-100 text-amber-800"
+      : status === "attended"
+        ? "bg-sky-100 text-sky-800"
         : "bg-stone-200 text-stone-600";
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${styles}`}>

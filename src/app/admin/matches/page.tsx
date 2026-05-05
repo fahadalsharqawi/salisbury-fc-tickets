@@ -1,4 +1,4 @@
-import { createMatchAction, deleteMatchAction } from "@/lib/actions";
+import { cancelMatchAction, createMatchAction } from "@/lib/actions";
 import { listMatches } from "@/lib/db";
 import { dateInput, formatKickoff, formatMoney, timeInput } from "@/lib/format";
 
@@ -32,9 +32,14 @@ export default async function AdminMatchesPage({
           {error}
         </div>
       )}
-      {ok && (
+      {ok === "created" && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Fixture added.
+        </div>
+      )}
+      {ok === "cancelled" && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Fixture cancelled — all bookings refunded.
         </div>
       )}
 
@@ -134,19 +139,19 @@ export default async function AdminMatchesPage({
                   </td>
                   <td className="px-5 py-3">{formatMoney(m.pricePerSeat)}</td>
                   <td className="px-5 py-3 text-right">
-                    <form action={deleteMatchAction}>
+                    <form action={cancelMatchAction}>
                       <input type="hidden" name="id" value={m.id} />
+                      <input
+                        type="hidden"
+                        name="reason"
+                        value="Cancelled by club."
+                      />
                       <button
                         type="submit"
                         className="text-sm font-medium text-red-600 hover:underline disabled:opacity-40"
-                        disabled={m.ticketsSold > 0}
-                        title={
-                          m.ticketsSold > 0
-                            ? "Cancel bookings before deleting"
-                            : undefined
-                        }
+                        disabled={!!m.cancelledAt}
                       >
-                        Delete
+                        {m.cancelledAt ? "Cancelled" : "Cancel match"}
                       </button>
                     </form>
                   </td>

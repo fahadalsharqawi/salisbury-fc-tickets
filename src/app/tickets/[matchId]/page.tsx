@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
 import { MAIN_STAND_SURCHARGE } from "@/lib/seats";
+import { createClient } from "@/lib/supabase/server";
 import BookingForm from "./BookingForm";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,17 @@ export default async function BookingFormPage({
   const { error } = await searchParams;
   const match = await getMatch(matchId);
   if (!match) notFound();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const prefill = user
+    ? {
+        name: (user.user_metadata?.name as string | undefined) ?? "",
+        email: user.email ?? "",
+      }
+    : undefined;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -69,7 +81,7 @@ export default async function BookingFormPage({
       )}
 
       <div className="mt-8">
-        <BookingForm match={match} error={error} />
+        <BookingForm match={match} error={error} prefill={prefill} />
       </div>
     </div>
   );
