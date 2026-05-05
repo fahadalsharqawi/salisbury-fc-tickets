@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Noto_Sans_Arabic, Oswald } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
+import MobileNav from "@/components/MobileNav";
+import ScrollReveal from "@/components/ScrollReveal";
 import { signOutAction } from "@/lib/auth";
 import { getCurrency, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import {
@@ -42,6 +44,13 @@ const notoArabic = Noto_Sans_Arabic({
 export const metadata: Metadata = {
   title: "Salisbury FC — match tickets",
   description: "Reserve your seat for the Whites' next fixture.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#1F4A6B",
 };
 
 type Partner = { name: string; logo: string; href?: string };
@@ -85,6 +94,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${oswald.variable} ${manrope.variable} ${notoArabic.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-sfc-ink">
+        <ScrollReveal />
         <header className="sticky top-0 z-50 border-b border-sfc-n-200/70 bg-white/85 backdrop-blur-md">
           <div className="sfc-container flex h-16 items-center gap-3 sm:h-[72px]">
             <Link href="/" className="flex items-center gap-3">
@@ -160,6 +170,7 @@ export default async function RootLayout({
               >
                 {t("nav.fixtures", locale)}
               </Link>
+              <MobileNav locale={locale} currency={currency} />
             </div>
           </div>
         </header>

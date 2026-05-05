@@ -132,7 +132,7 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
           locale={locale}
         />
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-4 sm:p-6">
-          <div className="overflow-x-auto">
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
           </div>
           <Legend currency={currency} locale={locale} />
