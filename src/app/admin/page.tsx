@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency-server";
 import { getStats, listBookings, listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
 import { localize, t, type Locale } from "@/lib/i18n";

@@ -1,5 +1,5 @@
 import { cancelMatchAction, createMatchAction } from "@/lib/actions";
-import { getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
 import { dateInput, formatKickoff, formatMoney, timeInput } from "@/lib/format";
 import { localize, t } from "@/lib/i18n";

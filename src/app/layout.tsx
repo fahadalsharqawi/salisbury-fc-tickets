@@ -6,7 +6,8 @@ import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
 import MobileNav from "@/components/MobileNav";
 import ScrollReveal from "@/components/ScrollReveal";
 import { signOutAction } from "@/lib/auth";
-import { getCurrency, SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency-server";
 import {
   LOCALE_DIR,
   LOCALE_LABELS,

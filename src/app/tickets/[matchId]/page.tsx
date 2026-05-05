@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency-server";
 import { getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
 import { localize, t } from "@/lib/i18n";

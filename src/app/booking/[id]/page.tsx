@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { cancelBookingAction } from "@/lib/actions";
-import { getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency-server";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
 import { localize, t, type Locale } from "@/lib/i18n";
