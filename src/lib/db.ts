@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
 import { TOTAL_SEATS } from "./seats";
 import type {
@@ -10,6 +11,12 @@ import type {
   PaymentMethod,
 } from "./types";
 import { calcTotal } from "./pricing";
+
+// Cache tags — pass to revalidateTag() in actions.ts to invalidate.
+export const CACHE_TAGS = {
+  matches: "matches",
+  match: (id: string) => `match:${id}`,
+} as const;
 
 type MatchRow = {
   id: string;
@@ -106,18 +113,18 @@ function withAvailability(match: Match, booked: string[]): MatchWithAvailability
   };
 }
 
-export async function listMatches(opts?: {
-  upcomingOnly?: boolean;
-}): Promise<MatchWithAvailability[]> {
+// Inner DB read — wrapped with unstable_cache below.
+async function listMatchesUncached(
+  upcomingOnly: boolean,
+): Promise<MatchWithAvailability[]> {
   const supabase = createAdminClient();
   let query = supabase
     .from("matches")
     .select("*")
     .order("kickoff", { ascending: true });
-  if (opts?.upcomingOnly) {
+  if (upcomingOnly) {
     query = query.gte("kickoff", new Date().toISOString());
   }
-  // Parallel — both queries can fire at once.
   const [matchRes, seatRes] = await Promise.all([
     query,
     supabase.from("booking_seats").select("match_id, seat_id"),
@@ -139,7 +146,27 @@ export async function listMatches(opts?: {
   );
 }
 
-export async function getMatch(id: string): Promise<MatchWithAvailability | null> {
+// Cache the matches+seats fetch across requests for 30 seconds. Mutating
+// actions call revalidateTag(CACHE_TAGS.matches) to flush instantly.
+const cachedListMatches = unstable_cache(
+  listMatchesUncached,
+  ["list-matches"],
+  { revalidate: 30, tags: [CACHE_TAGS.matches] },
+);
+
+export async function listMatches(opts?: {
+  upcomingOnly?: boolean;
+}): Promise<MatchWithAvailability[]> {
+  return cachedListMatches(opts?.upcomingOnly ?? false);
+}
+
+// Not cached — the per-match booking form needs live seat availability so
+// users see the latest picture before submitting. The DB unique constraint
+// still catches any race; this just minimises avoidable "seats just got
+// taken" errors.
+export async function getMatch(
+  id: string,
+): Promise<MatchWithAvailability | null> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("matches")
