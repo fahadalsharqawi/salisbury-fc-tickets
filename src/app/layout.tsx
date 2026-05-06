@@ -129,7 +129,7 @@ export default async function RootLayout({
               <NavLink href="/club">{t("nav.club", locale)}</NavLink>
               <NavLink href="/news">{t("nav.news", locale)}</NavLink>
               <NavLink href="/contact">{t("nav.contact", locale)}</NavLink>
-              <NavLink href="/admin">{t("nav.admin", locale)}</NavLink>
+              {/* /admin intentionally not linked — accessible by typing the URL. */}
             </nav>
 
             <div className="ms-auto flex items-center gap-2">
