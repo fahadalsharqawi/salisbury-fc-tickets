@@ -117,13 +117,15 @@ export async function listMatches(opts?: {
   if (opts?.upcomingOnly) {
     query = query.gte("kickoff", new Date().toISOString());
   }
-  const { data: matchRows, error: matchErr } = await query;
-  if (matchErr) throw new Error(matchErr.message);
-
-  const { data: seatRows, error: seatErr } = await supabase
-    .from("booking_seats")
-    .select("match_id, seat_id");
-  if (seatErr) throw new Error(seatErr.message);
+  // Parallel — both queries can fire at once.
+  const [matchRes, seatRes] = await Promise.all([
+    query,
+    supabase.from("booking_seats").select("match_id, seat_id"),
+  ]);
+  if (matchRes.error) throw new Error(matchRes.error.message);
+  if (seatRes.error) throw new Error(seatRes.error.message);
+  const matchRows = matchRes.data;
+  const seatRows = seatRes.data;
 
   const bookedByMatch = new Map<string, string[]>();
   for (const row of seatRows ?? []) {

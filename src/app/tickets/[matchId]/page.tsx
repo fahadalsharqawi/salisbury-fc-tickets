@@ -29,13 +29,15 @@ export default async function BookingFormPage({
   if (!match) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const prefill = user
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const prefill = claims
     ? {
-        name: (user.user_metadata?.name as string | undefined) ?? "",
-        email: user.email ?? "",
+        name:
+          ((claims.user_metadata as Record<string, unknown> | undefined)?.name as
+            | string
+            | undefined) ?? "",
+        email: (claims.email as string | undefined) ?? "",
       }
     : undefined;
 

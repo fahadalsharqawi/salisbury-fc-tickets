@@ -82,12 +82,19 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const currency = await getCurrency();
   const locale = await getLocale();
+  // getClaims() validates the JWT locally via the project's JWKS (no network round-trip
+  // for asymmetric ES256 keys, which the project uses) — getUser() would hit the Auth
+  // server on every render.
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const user = claims ? { id: claims.sub } : null;
   const displayName =
-    (user?.user_metadata?.name as string | undefined) ?? user?.email ?? null;
+    ((claims?.user_metadata as Record<string, unknown> | undefined)?.name as
+      | string
+      | undefined) ??
+    (claims?.email as string | undefined) ??
+    null;
   return (
     <html
       lang={locale}
