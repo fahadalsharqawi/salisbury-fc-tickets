@@ -22,7 +22,7 @@ const NAV_KEYS = [
   { href: "/club", key: "nav.club" },
   { href: "/news", key: "nav.news" },
   { href: "/contact", key: "nav.contact" },
-  { href: "/admin", key: "nav.admin" },
+  // /admin intentionally not surfaced — accessible by typing the URL.
 ] as const;
 
 export default function MobileNav({ locale, currency }: Props) {
