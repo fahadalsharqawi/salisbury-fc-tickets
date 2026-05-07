@@ -86,7 +86,7 @@ export default function MobileNav({ locale, currency }: Props) {
           role="dialog"
           aria-modal="true"
           aria-label={t("nav.menu", locale)}
-          className={`absolute end-0 top-0 flex h-full w-[88vw] max-w-sm flex-col rounded-s-3xl bg-white shadow-2xl transition-transform duration-300 ${
+          className={`absolute end-0 top-0 flex h-full w-[88vw] max-w-sm flex-col rounded-s-3xl bg-gradient-to-b from-white via-sfc-sky-light/30 to-sfc-sky-light shadow-2xl transition-transform duration-300 ${
             open
               ? "translate-x-0"
               : "translate-x-full rtl:-translate-x-full"
