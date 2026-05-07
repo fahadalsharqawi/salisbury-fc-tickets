@@ -124,23 +124,26 @@ async function listMatchesImpl(
   if (upcomingOnly) {
     query = query.gte("kickoff", new Date().toISOString());
   }
-  const [matchRes, seatRes] = await Promise.all([
-    query,
-    supabase.from("booking_seats").select("match_id, seat_id"),
-  ]);
+  const matchRes = await query;
   if (matchRes.error) throw new Error(matchRes.error.message);
-  if (seatRes.error) throw new Error(seatRes.error.message);
-  const matchRows = matchRes.data;
-  const seatRows = seatRes.data;
+  const matchRows = matchRes.data ?? [];
 
+  // Per-match seat lookup: Supabase caps a single SELECT at 1000 rows by
+  // default, so a stadium-wide booking_seats query would silently truncate.
+  // Doing one query per match keeps each result well under the cap.
   const bookedByMatch = new Map<string, string[]>();
-  for (const row of seatRows ?? []) {
-    const list = bookedByMatch.get(row.match_id) ?? [];
-    list.push(row.seat_id);
-    bookedByMatch.set(row.match_id, list);
-  }
+  await Promise.all(
+    matchRows.map(async (m) => {
+      const { data, error } = await supabase
+        .from("booking_seats")
+        .select("seat_id")
+        .eq("match_id", m.id);
+      if (error) throw new Error(error.message);
+      bookedByMatch.set(m.id, (data ?? []).map((r) => r.seat_id));
+    }),
+  );
 
-  return (matchRows ?? []).map((r) =>
+  return matchRows.map((r) =>
     withAvailability(rowToMatch(r as MatchRow), bookedByMatch.get(r.id) ?? []),
   );
 }
