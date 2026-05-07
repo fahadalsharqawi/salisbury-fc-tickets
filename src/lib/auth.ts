@@ -1,8 +1,18 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "./supabase/server";
+
+// Compute the absolute callback URL based on the request — works locally
+// (http://localhost:3002/auth/callback) and in production (https://...).
+async function callbackUrl(next: string = "/"): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "salisburyfc.vercel.app";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}/auth/callback?next=${encodeURIComponent(next)}`;
+}
 
 export async function signInAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
@@ -55,4 +65,27 @@ export async function signOutAction() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+export async function signInWithGoogleAction(formData: FormData) {
+  const next = String(formData.get("next") ?? "/");
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: await callbackUrl(next),
+      // Force account chooser so users on shared devices can pick.
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  if (error || !data.url) {
+    redirect(
+      "/sign-in?error=" +
+        encodeURIComponent(
+          error?.message ??
+            "Google sign-in isn't configured yet. Use email + password for now.",
+        ),
+    );
+  }
+  redirect(data.url);
 }

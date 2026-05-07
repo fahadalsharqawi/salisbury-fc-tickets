@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { signInAction } from "@/lib/auth";
+import { signInAction, signInWithGoogleAction } from "@/lib/auth";
 
 export const metadata = {
   title: "Sign in — Salisbury FC",
@@ -79,6 +79,23 @@ export default async function SignInPage({
         </button>
       </form>
 
+      <div className="anim-fade-up mt-4 flex items-center gap-3 px-2 text-xs uppercase tracking-[0.14em] text-stone-400">
+        <span className="h-px flex-1 bg-stone-200" />
+        or
+        <span className="h-px flex-1 bg-stone-200" />
+      </div>
+
+      <form action={signInWithGoogleAction} className="anim-fade-up mt-4">
+        <input type="hidden" name="next" value="/" />
+        <button
+          type="submit"
+          className="press inline-flex w-full items-center justify-center gap-3 rounded-full border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50"
+        >
+          <GoogleMark />
+          Continue with Google
+        </button>
+      </form>
+
       <p className="mt-6 text-center text-sm text-stone-600">
         New to Salisbury FC?{" "}
         <Link
@@ -104,5 +121,28 @@ function Field({
         className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
       />
     </label>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.44c-.28 1.46-1.12 2.7-2.38 3.53v2.93h3.84c2.25-2.07 3.55-5.13 3.55-8.7z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.93l-3.84-2.93c-1.07.72-2.43 1.16-4.09 1.16-3.14 0-5.8-2.12-6.75-4.97H1.29v3.12C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.25 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.55H1.29C.47 8.18 0 10.04 0 12s.47 3.82 1.29 5.45l3.96-3.12z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.41-3.41C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.55l3.96 3.12C6.2 6.89 8.86 4.77 12 4.77z"
+      />
+    </svg>
   );
 }
