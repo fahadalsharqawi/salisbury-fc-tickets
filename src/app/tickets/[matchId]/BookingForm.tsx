@@ -682,16 +682,16 @@ function TierRow({
           onClick={() => onChange(Math.max(0, value - 1))}
           disabled={value === 0}
           aria-label={`Reduce ${label}`}
-          className="press flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-lg leading-none text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="press flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 sm:text-lg"
         >
           −
         </button>
-        <span className="w-6 text-center text-sm font-semibold tabular-nums">{value}</span>
+        <span className="w-7 text-center text-base font-semibold tabular-nums sm:w-6 sm:text-sm">{value}</span>
         <button
           type="button"
           onClick={() => onChange(value + 1)}
           aria-label={`Add ${label}`}
-          className="press flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-lg leading-none text-stone-700 transition hover:bg-stone-100"
+          className="press flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 transition hover:bg-stone-100 sm:h-9 sm:w-9 sm:text-lg"
         >
           +
         </button>
