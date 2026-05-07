@@ -45,9 +45,13 @@ const SOUTH_H = unit(S.rows) + STAND_PADDING * 2;
 // MIN_BOWL_SCALE we let it overflow and scroll horizontally rather than
 // make seats unreadable.
 const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
-// Allow shrinking down to 0.4 — at 24px base × 0.4 = ~10px seats, which is
-// tight but still tappable. Below this we let the bowl overflow and scroll.
-const MIN_BOWL_SCALE = 0.4;
+// Allow shrinking down to 0.35 — at 24px base × 0.35 = ~8px seats, tight
+// but tappable on a high-DPI phone. Below this we let the bowl overflow.
+const MIN_BOWL_SCALE = 0.35;
+// On phone-width viewports we deliberately render the bowl narrower than
+// the container so the pitch doesn't dominate. Below this width is "phone".
+const MOBILE_BREAKPOINT = 640;
+const MOBILE_BOWL_FRACTION = 0.7;
 
 type Props = {
   match: MatchWithAvailability;
@@ -67,7 +71,8 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
   const [under17Count, setUnder17Count] = useState(0);
   const [under5Count, setUnder5Count] = useState(0);
 
-  // Auto-fit the bowl to the container width.
+  // Auto-fit the bowl. On phone viewports we target a fraction of the
+  // container width so the pitch + stands stay compact.
   const bowlContainerRef = useRef<HTMLDivElement>(null);
   const [bowlZoom, setBowlZoom] = useState<number | null>(null);
   useEffect(() => {
@@ -75,10 +80,12 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
     if (!el) return;
     const update = () => {
       const w = el.clientWidth;
-      if (w >= TOTAL_BOWL_WIDTH) {
+      const isPhone = w < MOBILE_BREAKPOINT;
+      const target = isPhone ? w * MOBILE_BOWL_FRACTION : w;
+      if (target >= TOTAL_BOWL_WIDTH) {
         setBowlZoom(1);
       } else {
-        setBowlZoom(Math.max(MIN_BOWL_SCALE, w / TOTAL_BOWL_WIDTH));
+        setBowlZoom(Math.max(MIN_BOWL_SCALE, target / TOTAL_BOWL_WIDTH));
       }
     };
     update();
@@ -163,13 +170,14 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-2 sm:p-6">
           <div
             ref={bowlContainerRef}
-            className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0"
+            className="-mx-2 flex justify-center overflow-x-auto px-2 sm:mx-0 sm:px-0"
           >
-            {/* Bowl renders at TOTAL_BOWL_WIDTH; zoom (set by the
-                ResizeObserver above) shrinks it to fit any container. zoom
-                collapses the layout box too, so no empty whitespace below. */}
+            {/* Bowl renders at TOTAL_BOWL_WIDTH; zoom (computed above)
+                shrinks it. On phones the target is ~70% of container width
+                so the bowl + pitch sit centered with breathing room and
+                don't dominate vertical space. */}
             <div
-              className="[zoom:0.65] sm:[zoom:1]"
+              className="[zoom:0.5] sm:[zoom:1]"
               style={bowlZoom != null ? { zoom: bowlZoom } : undefined}
             >
               <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
