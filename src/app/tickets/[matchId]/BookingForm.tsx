@@ -131,9 +131,14 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
           remaining={match.remaining}
           locale={locale}
         />
-        <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-4 sm:p-6">
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
+        <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-2 sm:p-6">
+          <div className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
+            {/* Shrink the whole bowl on phone — pitch + stands scale together
+                so seat columns stay aligned. CSS zoom collapses the layout
+                box (unlike transform: scale), so no empty space below. */}
+            <div className="[zoom:0.65] sm:[zoom:1]">
+              <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
+            </div>
           </div>
           <Legend currency={currency} locale={locale} />
         </div>
