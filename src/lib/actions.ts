@@ -2,9 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import {
-  CACHE_TAGS,
   cancelBooking,
   cancelMatch,
   createBooking,
@@ -102,7 +101,6 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
     fail(result.error);
   }
 
-  updateTag(CACHE_TAGS.matches);
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/bookings");
@@ -120,7 +118,6 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
   const redirectTo = str(formData.get("redirectTo")) || `/booking/${id}`;
   if (!id) return;
   const result = await cancelBooking(id, by);
-  updateTag(CACHE_TAGS.matches);
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/bookings");
@@ -175,7 +172,6 @@ export async function createMatchAction(formData: FormData): Promise<void> {
     );
   }
   await createMatch(data);
-  updateTag(CACHE_TAGS.matches);
   revalidatePath("/");
   revalidatePath("/admin/matches");
   revalidatePath("/tickets");
@@ -187,7 +183,6 @@ export async function updateMatchAction(formData: FormData): Promise<void> {
   if (!id) return;
   const data = parseMatchForm(formData);
   await updateMatch(id, data);
-  updateTag(CACHE_TAGS.matches);
   revalidatePath("/");
   revalidatePath("/admin/matches");
   revalidatePath("/tickets");
@@ -199,7 +194,6 @@ export async function cancelMatchAction(formData: FormData): Promise<void> {
   const reason = str(formData.get("reason")) || "Cancelled by club.";
   if (!id) return;
   const result = await cancelMatch(id, reason);
-  updateTag(CACHE_TAGS.matches);
   revalidatePath("/");
   revalidatePath("/admin/matches");
   revalidatePath("/admin/bookings");

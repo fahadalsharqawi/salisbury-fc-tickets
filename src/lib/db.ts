@@ -1,5 +1,4 @@
 import "server-only";
-import { unstable_cache } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
 import { TOTAL_SEATS } from "./seats";
 import type {
@@ -12,11 +11,6 @@ import type {
 } from "./types";
 import { calcTotal } from "./pricing";
 
-// Cache tags — pass to revalidateTag() in actions.ts to invalidate.
-export const CACHE_TAGS = {
-  matches: "matches",
-  match: (id: string) => `match:${id}`,
-} as const;
 
 type MatchRow = {
   id: string;
@@ -113,8 +107,13 @@ function withAvailability(match: Match, booked: string[]): MatchWithAvailability
   };
 }
 
-// Inner DB read — wrapped with unstable_cache below.
-async function listMatchesUncached(
+export async function listMatches(opts?: {
+  upcomingOnly?: boolean;
+}): Promise<MatchWithAvailability[]> {
+  return listMatchesImpl(opts?.upcomingOnly ?? false);
+}
+
+async function listMatchesImpl(
   upcomingOnly: boolean,
 ): Promise<MatchWithAvailability[]> {
   const supabase = createAdminClient();
@@ -144,20 +143,6 @@ async function listMatchesUncached(
   return (matchRows ?? []).map((r) =>
     withAvailability(rowToMatch(r as MatchRow), bookedByMatch.get(r.id) ?? []),
   );
-}
-
-// Cache the matches+seats fetch across requests for 30 seconds. Mutating
-// actions call revalidateTag(CACHE_TAGS.matches) to flush instantly.
-const cachedListMatches = unstable_cache(
-  listMatchesUncached,
-  ["list-matches"],
-  { revalidate: 30, tags: [CACHE_TAGS.matches] },
-);
-
-export async function listMatches(opts?: {
-  upcomingOnly?: boolean;
-}): Promise<MatchWithAvailability[]> {
-  return cachedListMatches(opts?.upcomingOnly ?? false);
 }
 
 // Not cached — the per-match booking form needs live seat availability so
