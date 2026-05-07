@@ -92,9 +92,9 @@ export default function MobileNav({ locale, currency }: Props) {
               : "translate-x-full rtl:-translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-sfc-n-200 px-5 py-4">
-            <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-sfc-n-500">
-              {t("nav.menu", locale)}
+          <div className="flex items-center justify-between border-b border-sfc-n-200 bg-sfc-bone px-5 py-4">
+            <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-sfc-navy">
+              Menu
             </span>
             <button
               type="button"
