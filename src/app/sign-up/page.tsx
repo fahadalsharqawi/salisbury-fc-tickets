@@ -111,17 +111,6 @@ export default async function SignUpPage({
         </button>
       </form>
 
-      <form action={signInWithMicrosoftAction} className="anim-fade-up mt-3">
-        <input type="hidden" name="next" value="/" />
-        <button
-          type="submit"
-          className="press inline-flex w-full items-center justify-center gap-3 rounded-full border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50"
-        >
-          <MicrosoftMark />
-          Continue with Microsoft
-        </button>
-      </form>
-
       <form action={signInWithAppleAction} className="anim-fade-up mt-3">
         <input type="hidden" name="next" value="/" />
         <button
@@ -130,6 +119,17 @@ export default async function SignUpPage({
         >
           <AppleMark />
           Sign in with Apple
+        </button>
+      </form>
+
+      <form action={signInWithMicrosoftAction} className="anim-fade-up mt-3">
+        <input type="hidden" name="next" value="/" />
+        <button
+          type="submit"
+          className="press inline-flex w-full items-center justify-center gap-3 rounded-full border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50"
+        >
+          <MicrosoftMark />
+          Continue with Microsoft
         </button>
       </form>
 
