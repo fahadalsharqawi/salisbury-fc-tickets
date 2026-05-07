@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
 import { NEWS, getNews } from "@/lib/club";
 import { localize, t, type Locale } from "@/lib/i18n";
@@ -103,11 +104,14 @@ export default async function NewsArticlePage({
             <h2 className="sfc-display mb-5 text-2xl font-bold">
               {t("news.more", locale)}
             </h2>
-            <ul className="stagger grid gap-4 sm:grid-cols-3">
+            <MotionStagger as="ul" className="grid gap-4 sm:grid-cols-3" stagger={0.07}>
               {others.map((n) => (
-                <li
+                <MotionItem
+                  as="li"
                   key={n.slug}
-                  className="anim-fade-up lift overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+                  whileHover={{ y: -3, boxShadow: "0 12px 28px -14px rgba(12,22,54,0.22)" }}
+                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
                 >
                   <Link href={`/news/${n.slug}`} className="block">
                     <div className="relative aspect-[16/9] overflow-hidden">
@@ -122,9 +126,9 @@ export default async function NewsArticlePage({
                       </h3>
                     </div>
                   </Link>
-                </li>
+                </MotionItem>
               ))}
-            </ul>
+            </MotionStagger>
           </div>
         </section>
       )}

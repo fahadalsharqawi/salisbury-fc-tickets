@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NEWS, SQUAD, getPlayer } from "@/lib/club";
 import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
@@ -129,7 +130,7 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
                     National League South
                   </span>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                <MotionStagger className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4" stagger={0.05}>
                   <StatTile label="Appearances" value={String(player.stats.appearances)} />
                   <StatTile label="Starts" value={String(player.stats.starts)} />
                   <StatTile label="Mins" value={player.stats.mins} />
@@ -137,7 +138,7 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
                   <StatTile label="Goals" value={String(player.stats.goals)} accent />
                   <StatTile label="Bookings" value={String(player.stats.bookings)} />
                   <StatTile label="Sent off" value={String(player.stats.sentOff)} />
-                </div>
+                </MotionStagger>
               </section>
             )}
 
@@ -230,7 +231,8 @@ function StatTile({
   accent?: boolean;
 }) {
   return (
-    <div
+    <MotionItem
+      variant="scaleIn"
       className={`rounded-xl border ${
         accent
           ? "border-sfc-navy bg-sfc-navy text-white"
@@ -247,7 +249,7 @@ function StatTile({
       >
         {label}
       </div>
-    </div>
+    </MotionItem>
   );
 }
 

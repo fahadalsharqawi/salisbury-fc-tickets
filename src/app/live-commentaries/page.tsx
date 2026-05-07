@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 
 export const metadata = {
   title: "Live commentaries — Salisbury FC",
@@ -71,7 +72,7 @@ export default function LiveCommentariesPage() {
           </div>
         </section>
 
-        <section className="anim-fade-up mt-6 grid gap-4 sm:grid-cols-3">
+        <MotionStagger as="section" className="mt-6 grid gap-4 sm:grid-cols-3" stagger={0.08}>
           <ListenWay
             label="DAB radio"
             text="Tune in to Salisbury Radio Sport on DAB+ across the local broadcast area."
@@ -84,7 +85,7 @@ export default function LiveCommentariesPage() {
             label="App"
             text="Download the Salisbury Radio app on iOS or Android and pick the Sport stream."
           />
-        </section>
+        </MotionStagger>
 
         <div className="anim-fade-up mt-10 flex flex-wrap gap-3">
           <Link href="/tickets" className="sfc-btn sfc-btn--primary press">
@@ -101,9 +102,13 @@ export default function LiveCommentariesPage() {
 
 function ListenWay({ label, text }: { label: string; text: string }) {
   return (
-    <div className="rounded-2xl border border-sfc-n-200 bg-white p-5">
+    <MotionItem
+      whileHover={{ y: -2, boxShadow: "0 12px 28px -14px rgba(12,22,54,0.18)" }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className="rounded-2xl border border-sfc-n-200 bg-white p-5"
+    >
       <div className="sfc-eyebrow text-sfc-n-500">{label}</div>
       <p className="mt-2 text-sm text-sfc-n-700">{text}</p>
-    </div>
+    </MotionItem>
   );
 }
