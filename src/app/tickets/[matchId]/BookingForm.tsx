@@ -320,7 +320,7 @@ function Bowl({
       <Corner />
 
       <WestStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
-      <Pitch locale={locale} />
+      <Pitch />
       <EastStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
 
       <Corner />
@@ -377,7 +377,9 @@ function StandFrame({
               }
         }
       >
-        {isMain ? `${label} · Covered` : label}
+        {/* "Covered" indicator is the navy roof stripe; keep the label
+            short so it doesn't overlap the seats on narrow viewports. */}
+        {label}
       </div>
       {children}
     </div>
@@ -550,7 +552,7 @@ function SeatBtn({
   );
 }
 
-function Pitch({ locale }: { locale: Locale }) {
+function Pitch() {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-md shadow-inner ring-1 ring-emerald-900/30">
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700" />
@@ -578,11 +580,6 @@ function Pitch({ locale }: { locale: Locale }) {
         <rect x="36" y="132" width="28" height="6" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
         <circle cx="50" cy="129" r="0.8" fill="white" />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="rounded-full bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.4em] text-white/80 ring-1 ring-white/20 backdrop-blur-sm">
-          {t("seats.pitch", locale)}
-        </span>
-      </div>
     </div>
   );
 }

@@ -98,28 +98,34 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
             </div>
           </div>
 
-          <div className="anim-fade-up space-y-6" style={{ ["--anim-delay" as string]: "120ms" }}>
+          <div
+            className="anim-fade-up space-y-6"
+            style={{ ["--anim-delay" as string]: "120ms" }}
+          >
             <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
-              <h2 className="sfc-display text-lg font-bold">Profile</h2>
-              <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <Field label="Position" value={t(`position.${player.position}`, locale)} />
-                <Field label="Squad number" value={player.number != null ? `#${player.number}` : "—"} />
-                <Field label="Club" value={t("brand.name", locale)} />
-                <Field label="Stadium" value={localize("Raymond McEnhill Stadium", locale)} />
-              </dl>
+              <h2 className="sfc-display text-lg font-bold">About</h2>
+              <p className="mt-3 text-sm leading-relaxed text-sfc-n-700">
+                {aboutPlayer(player)}
+              </p>
             </section>
 
             <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
-              <h2 className="sfc-display text-lg font-bold">2025/26 season</h2>
-              <p className="mt-2 text-sm text-sfc-n-600">
-                Detailed appearance and goal stats coming soon.
-              </p>
-              <div className="mt-4 grid grid-cols-3 gap-3 text-center sm:grid-cols-4">
-                <Stat label="Apps" value="—" />
-                <Stat label="Goals" value="—" />
-                <Stat label="Assists" value="—" />
-                <Stat label="Cards" value="—" />
-              </div>
+              <h2 className="sfc-display text-lg font-bold">Profile</h2>
+              <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                <Field
+                  label="Position"
+                  value={t(`position.${player.position}`, locale)}
+                />
+                <Field
+                  label="Squad number"
+                  value={player.number != null ? `#${player.number}` : "—"}
+                />
+                <Field label="Club" value={t("brand.name", locale)} />
+                <Field
+                  label="Stadium"
+                  value={localize("Raymond McEnhill Stadium", locale)}
+                />
+              </dl>
             </section>
 
             <section className="flex flex-wrap gap-3">
@@ -178,13 +184,21 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-sfc-bone px-3 py-3">
-      <div className="sfc-display text-2xl font-bold text-sfc-ink">{value}</div>
-      <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-sfc-n-500">
-        {label}
-      </div>
-    </div>
-  );
+function aboutPlayer(player: { name: string; position: string; number?: number }) {
+  const number =
+    player.number != null
+      ? `wears the number ${player.number} shirt`
+      : "is part of the first-team squad";
+  switch (player.position) {
+    case "Goalkeeper":
+      return `${player.name} ${number} for Salisbury FC, lining up between the posts at the Raymond McEnhill Stadium.`;
+    case "Defender":
+      return `${player.name} ${number} for Salisbury FC, operating across the back-line at the Raymond McEnhill Stadium.`;
+    case "Midfielder":
+      return `${player.name} ${number} for Salisbury FC, contributing in the engine room of the side at the Raymond McEnhill Stadium.`;
+    case "Forward":
+      return `${player.name} ${number} for Salisbury FC, leading the line for the Whites at the Raymond McEnhill Stadium.`;
+    default:
+      return `${player.name} ${number} for Salisbury FC.`;
+  }
 }

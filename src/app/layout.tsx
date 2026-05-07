@@ -207,7 +207,10 @@ export default async function RootLayout({
                     <img
                       src={p.logo}
                       alt={p.name}
-                      className="max-h-full w-auto max-w-[140px] object-contain opacity-80 transition group-hover:opacity-100"
+                      width={140}
+                      height={56}
+                      loading="lazy"
+                      className="max-h-14 w-auto max-w-[140px] object-contain opacity-80 transition group-hover:opacity-100"
                     />
                   </a>
                 ))}
