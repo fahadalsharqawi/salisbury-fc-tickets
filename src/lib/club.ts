@@ -1,45 +1,92 @@
 // Factual data sourced from the official Salisbury FC website.
+// Photo URLs are direct links to the club's media CDN (touchlinefc.co.uk).
 
-export type StaffMember = { name: string; role: string };
+export type StaffMember = {
+  slug: string;
+  name: string;
+  role: string;
+  photoUrl?: string;
+};
 
 export const STAFF: StaffMember[] = [
-  { name: "Brian Dutton", role: "Manager" },
-  { name: "Callum Hart", role: "Assistant Manager" },
-  { name: "Theo Lewis", role: "First Team Coach" },
+  {
+    slug: "brian-dutton",
+    name: "Brian Dutton",
+    role: "Manager",
+    photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200410/Brian-Dutton.jpg",
+  },
+  {
+    slug: "callum-hart",
+    name: "Callum Hart",
+    role: "Assistant Manager",
+    photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200412/Callum-Hart.jpg",
+  },
+  {
+    slug: "theo-lewis",
+    name: "Theo Lewis",
+    role: "First Team Coach",
+    photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200427/Theo-Lewis.jpg",
+  },
+  {
+    slug: "harry-vickery",
+    name: "Harry Vickery",
+    role: "Sports Therapist",
+    photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200415/Harry-Vickery.jpg",
+  },
+  {
+    slug: "jason-brice",
+    name: "Jason Brice",
+    role: "Assistant Kit Man",
+    photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200417/Jason-Brice.jpg",
+  },
 ];
 
 export type Position = "Goalkeeper" | "Defender" | "Midfielder" | "Forward";
 
-export type Player = { name: string; position: Position };
+export type Player = {
+  slug: string;
+  name: string;
+  position: Position;
+  number?: number;
+  photoUrl?: string;
+};
 
 export const SQUAD: Player[] = [
-  { name: "Will Buse", position: "Goalkeeper" },
-  { name: "Lewis Gunstone-Gray", position: "Goalkeeper" },
-  { name: "Josh Sommerton", position: "Defender" },
-  { name: "Camron Gbadebo", position: "Defender" },
-  { name: "Tom Davies", position: "Defender" },
-  { name: "Tom Cove", position: "Defender" },
-  { name: "Dominic Revan", position: "Defender" },
-  { name: "Richard McIntyre", position: "Defender" },
-  { name: "Ollie Morgan", position: "Defender" },
-  { name: "Peter Ojemen", position: "Defender" },
-  { name: "Ronnie Harvey", position: "Midfielder" },
-  { name: "George Penn", position: "Midfielder" },
-  { name: "Matt Briggs", position: "Midfielder" },
-  { name: "Josh Hedges", position: "Midfielder" },
-  { name: "Malachi Ogunleye", position: "Midfielder" },
-  { name: "Ryan Penny", position: "Midfielder" },
-  { name: "Josh Keeya", position: "Midfielder" },
-  { name: "Evander Grubb", position: "Midfielder" },
-  { name: "Max Jolliffe", position: "Midfielder" },
-  { name: "Harry Lee", position: "Midfielder" },
-  { name: "Balraj Landa", position: "Midfielder" },
-  { name: "Ollie Bray", position: "Forward" },
-  { name: "Tommy Willard", position: "Forward" },
-  { name: "Nathan Odokonyero", position: "Forward" },
-  { name: "Noah Coppin", position: "Forward" },
-  { name: "Mohammad Dabre", position: "Forward" },
+  { slug: "will-buse", name: "Will Buse", position: "Goalkeeper", number: 1, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Will-Buse.jpg" },
+  { slug: "lewis-gunstone-gray", name: "Lewis Gunstone-Gray", position: "Goalkeeper", number: 13, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/10/28153008/DSC_9108-e1769614234835.jpg" },
+  { slug: "josh-sommerton", name: "Josh Sommerton", position: "Defender", number: 3, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Josh-Sommerton.jpg" },
+  { slug: "camron-gbadebo", name: "Camron Gbadebo", position: "Defender", number: 4, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28151248/Salisbury-v-Hampton-and-Richmond-Borough-24th-January-2026-RE-67-e1769613455786.jpg" },
+  { slug: "tom-davies", name: "Tom Davies", position: "Defender", number: 16, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200429/Tom-Davies.jpg" },
+  { slug: "tom-cove", name: "Tom Cove", position: "Defender", number: 20, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200428/Tom-Cove.jpg" },
+  { slug: "dominic-revan", name: "Dominic Revan", position: "Defender", number: 24, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Dom-Revan.jpg" },
+  { slug: "richard-mcintyre", name: "Richard McIntyre", position: "Defender", number: 32, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104340/IMG_0188-e1772966641220.png" },
+  { slug: "ollie-morgan", name: "Ollie Morgan", position: "Defender", number: 33, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/10/22135522/Salisbury-v-Slough-Town-18th-October-2025-RE-35-e1761137763188.jpg" },
+  { slug: "peter-ojemen", name: "Peter Ojemen", position: "Defender", number: 34, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104609/IMG_1981-e1772966802778.png" },
+  { slug: "ronnie-harvey", name: "Ronnie Harvey", position: "Midfielder" },
+  { slug: "george-penn", name: "George Penn", position: "Midfielder", number: 6, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/03/08103256/SAL-VS-MAI-11-e1772965999271.jpg" },
+  { slug: "matt-briggs", name: "Matt Briggs", position: "Midfielder", number: 8, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Matt-Briggs.jpg" },
+  { slug: "josh-hedges", name: "Josh Hedges", position: "Midfielder", number: 14, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22135202/Salisbury-v-Laverstock-Ford-13th-September-2025-FA-Cup-RE-23-e1761137561175.jpg" },
+  { slug: "malachi-ogunleye", name: "Malachi Ogunleye", position: "Midfielder", number: 15, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145132/DSC_7751.jpg" },
+  { slug: "ryan-penny", name: "Ryan Penny", position: "Midfielder", number: 17, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13201556/20240803-Squad-Shot-Penny.jpg" },
+  { slug: "josh-keeya", name: "Josh Keeya", position: "Midfielder", number: 18, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200419/Josh-Keeya.jpg" },
+  { slug: "evander-grubb", name: "Evander Grubb", position: "Midfielder", number: 19, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Evander-Grubb.jpg" },
+  { slug: "max-jolliffe", name: "Max Jolliffe", position: "Midfielder", number: 27, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/31211631/IMG_8643-e1769894248158.jpg" },
+  { slug: "harry-lee", name: "Harry Lee", position: "Midfielder", number: 30, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22140323/Salisbury-v-Torquay-United-4th-October-2025-31-1-e1761138244298.jpg" },
+  { slug: "balraj-landa", name: "Balraj Landa", position: "Midfielder", number: 31, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08103819/IMG_0222-e1772966356522.png" },
+  { slug: "ollie-bray", name: "Ollie Bray", position: "Forward", number: 9, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200425/Ollie-Bray.jpg" },
+  { slug: "tommy-willard", name: "Tommy Willard", position: "Forward", number: 10, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Tommy-Willard.jpg" },
+  { slug: "nathan-odokonyero", name: "Nathan Odokonyero", position: "Forward", number: 11, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/28152349/SAL-VS-HAM-11-e1769613903198.jpg" },
+  { slug: "noah-coppin", name: "Noah Coppin", position: "Forward", number: 22, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200424/Noah-Coppin.jpg" },
+  { slug: "mohammad-dabre", name: "Mohammad Dabre", position: "Forward", number: 25, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145356/SAL-VS-WOR-20.jpg" },
 ];
+
+export function getPlayer(slug: string): Player | undefined {
+  return SQUAD.find((p) => p.slug === slug);
+}
+
+export function getStaff(slug: string): StaffMember | undefined {
+  return STAFF.find((s) => s.slug === slug);
+}
 
 export type LeagueRow = {
   league: string;

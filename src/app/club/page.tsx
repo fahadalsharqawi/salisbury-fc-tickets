@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LEAGUE, NEWS, SQUAD, STADIUM, STAFF, type Position } from "@/lib/club";
 import { localize, t, type Locale } from "@/lib/i18n";
@@ -95,58 +96,56 @@ export default async function ClubPage() {
 
         <section className="mt-12">
           <h2 className="sfc-display anim-fade-up mb-4 text-2xl font-bold">
-            {t("club.staff-heading", locale)}
+            {t("club.squad-heading", locale)}
           </h2>
-          <ul className="stagger grid gap-3 sm:grid-cols-3">
-            {STAFF.map((s) => (
-              <li
-                key={s.name}
-                className="anim-fade-up lift rounded-2xl border border-sfc-n-200 bg-white p-5"
-              >
-                <div className="sfc-eyebrow">{localize(s.role, locale)}</div>
-                <div className="sfc-display mt-1 text-lg font-bold">
-                  {localize(s.name, locale)}
-                </div>
-              </li>
-            ))}
-          </ul>
+          {POSITION_ORDER.map((pos) => (
+            <div key={pos} className="anim-fade-up mt-6">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="sfc-display text-sm font-bold uppercase tracking-[0.1em] text-sfc-n-500">
+                  {t(`position.${pos}`, locale)}
+                </h3>
+                <span className="text-xs text-sfc-n-400">
+                  {t(
+                    byPosition[pos].length === 1
+                      ? "club.players-1"
+                      : "club.players-n",
+                    locale,
+                    { n: byPosition[pos].length },
+                  )}
+                </span>
+              </div>
+              <ul className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {byPosition[pos].map((p) => (
+                  <li key={p.slug}>
+                    <PersonCard
+                      href={`/club/squad/${p.slug}`}
+                      photoUrl={p.photoUrl}
+                      name={p.name}
+                      meta={p.number ? `#${p.number}` : t(`position.${p.position}`, locale)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
 
         <section className="mt-12">
           <h2 className="sfc-display anim-fade-up mb-4 text-2xl font-bold">
-            {t("club.squad-heading", locale)}
+            {t("club.staff-heading", locale)}
           </h2>
-          <div className="stagger grid gap-4 lg:grid-cols-2">
-            {POSITION_ORDER.map((pos) => (
-              <div
-                key={pos}
-                className="anim-fade-up rounded-2xl border border-sfc-n-200 bg-white p-5"
-              >
-                <div className="flex items-baseline justify-between">
-                  <h3 className="sfc-display text-sm font-bold uppercase tracking-[0.1em] text-sfc-n-500">
-                    {t(`position.${pos}`, locale)}
-                  </h3>
-                  <span className="text-xs text-sfc-n-400">
-                    {t(
-                      byPosition[pos].length === 1 ? "club.players-1" : "club.players-n",
-                      locale,
-                      { n: byPosition[pos].length },
-                    )}
-                  </span>
-                </div>
-                <ul className="mt-3 grid gap-1 sm:grid-cols-2">
-                  {byPosition[pos].map((p) => (
-                    <li
-                      key={p.name}
-                      className="px-2 py-1.5 text-sm text-sfc-n-800 transition hover:bg-sfc-n-50"
-                    >
-                      {localize(p.name, locale)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <ul className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {STAFF.map((s) => (
+              <li key={s.slug}>
+                <PersonCard
+                  href={`/club/staff/${s.slug}`}
+                  photoUrl={s.photoUrl}
+                  name={s.name}
+                  meta={localize(s.role, locale)}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
         <section className="mt-12">
@@ -193,6 +192,59 @@ export default async function ClubPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function PersonCard({
+  href,
+  photoUrl,
+  name,
+  meta,
+}: {
+  href: string;
+  photoUrl?: string;
+  name: string;
+  meta: string;
+}) {
+  // Initials shown in the placeholder if no photo is available.
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  return (
+    <Link
+      href={href}
+      className="anim-fade-up lift group block overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+    >
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-sfc-bone">
+        {photoUrl ? (
+          <Image
+            src={photoUrl}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <span className="sfc-display text-3xl font-bold text-sfc-n-400">
+              {initials}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="px-3 py-3">
+        <div className="sfc-display text-[13px] font-bold leading-tight text-sfc-ink sm:text-sm">
+          {name}
+        </div>
+        <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-sfc-n-500 sm:text-xs">
+          {meta}
+        </div>
+      </div>
+    </Link>
   );
 }
 
