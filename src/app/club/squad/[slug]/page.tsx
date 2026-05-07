@@ -1,9 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SQUAD, getPlayer } from "@/lib/club";
-import { localize, t } from "@/lib/i18n";
+import { NEWS, SQUAD, getPlayer } from "@/lib/club";
+import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
+
+// The official salisburyfc.co.uk player profile pages all carry the same
+// "Published 13 August, 2025 by Andy Munns" line. We mirror that.
+const PROFILE_PUBLISHED = "2025-08-13";
+const PROFILE_AUTHOR = "Andy Munns";
 
 type Params = { slug: string };
 
@@ -102,6 +107,13 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
             className="anim-fade-up space-y-6"
             style={{ ["--anim-delay" as string]: "120ms" }}
           >
+            {/* Pub date + author — matches the byline format on the
+                official salisburyfc.co.uk player profile pages. */}
+            <p className="text-xs text-sfc-n-500">
+              Published {formatPublishedDate(PROFILE_PUBLISHED, locale)} by{" "}
+              <span className="font-semibold text-sfc-n-700">{PROFILE_AUTHOR}</span>
+            </p>
+
             <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
               <h2 className="sfc-display text-lg font-bold">About</h2>
               <p className="mt-3 text-sm leading-relaxed text-sfc-n-700">
@@ -127,6 +139,10 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
                 />
               </dl>
             </section>
+
+            <ShareLinks name={player.name} />
+
+            <RelatedNews locale={locale} />
 
             <section className="flex flex-wrap gap-3">
               <Link href="/tickets" className="sfc-btn sfc-btn--primary press">
@@ -181,6 +197,72 @@ function Field({ label, value }: { label: string; value: string }) {
       </div>
       <div className="mt-1 text-sm font-semibold text-sfc-ink">{value}</div>
     </div>
+  );
+}
+
+function formatPublishedDate(iso: string, locale: Locale): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(
+    locale === "ar" ? "ar" : "en-GB",
+    { day: "numeric", month: "long", year: "numeric" },
+  );
+}
+
+function ShareLinks({ name }: { name: string }) {
+  const url = `https://salisburyfc.vercel.app/club/squad/`;
+  const text = `${name} — Salisbury FC`;
+  const x = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  const wa = `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`;
+  return (
+    <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
+      <h2 className="sfc-display text-lg font-bold">Share</h2>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <ShareLink href={x} label="X" />
+        <ShareLink href={fb} label="Facebook" />
+        <ShareLink href={wa} label="WhatsApp" />
+      </div>
+    </section>
+  );
+}
+
+function ShareLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="rounded-full border border-sfc-n-200 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-sfc-navy hover:bg-sfc-bone"
+    >
+      {label}
+    </a>
+  );
+}
+
+function RelatedNews({ locale }: { locale: Locale }) {
+  const items = NEWS.slice(0, 3);
+  if (items.length === 0) return null;
+  return (
+    <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
+      <h2 className="sfc-display text-lg font-bold">Related</h2>
+      <ul className="mt-3 divide-y divide-sfc-n-200">
+        {items.map((n) => (
+          <li key={n.slug}>
+            <Link
+              href={`/news/${n.slug}`}
+              className="block py-3 transition hover:bg-sfc-bone"
+            >
+              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-sfc-n-500">
+                {n.category} · {formatPublishedDate(n.date, locale)}
+              </div>
+              <div className="mt-0.5 text-sm font-semibold text-sfc-ink">
+                {n.title[locale]}
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
