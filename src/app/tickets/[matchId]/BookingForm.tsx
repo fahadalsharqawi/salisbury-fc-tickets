@@ -550,12 +550,23 @@ function SeatBtn({
       style={{ width: SEAT_PX, height: SEAT_PX }}
     >
       <span className="sr-only">{id}</span>
-      {/* Hide the visible column number on phone — at full mobile zoom the
-          digit is unreadable anyway and just adds visual noise. The aria
-          label above still announces the seat ID for screen readers. */}
-      <span aria-hidden className="hidden sm:inline">
-        {label}
-      </span>
+      {booked ? (
+        // Booked seats render an "×" so it's obvious they're taken even
+        // when zoomed out on phone where the seat is just a small tile.
+        <span
+          aria-hidden
+          className="block leading-none text-sfc-n-500"
+          style={{ fontSize: SEAT_PX * 0.85 }}
+        >
+          ×
+        </span>
+      ) : (
+        // Available seats show the column number on tablet+ only — at
+        // full mobile zoom the digit is unreadable.
+        <span aria-hidden className="hidden sm:inline">
+          {label}
+        </span>
+      )}
     </button>
   );
 }
