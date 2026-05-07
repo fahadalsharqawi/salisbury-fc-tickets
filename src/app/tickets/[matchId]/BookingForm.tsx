@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBookingAction } from "@/lib/actions";
 import {
@@ -40,6 +40,13 @@ const EAST_W = unit(E.rows) + STAND_PADDING * 2;
 const NORTH_H = unit(N.rows) + STAND_PADDING * 2;
 const SOUTH_H = unit(S.rows) + STAND_PADDING * 2;
 
+// Bowl renders at this fixed pixel width; on narrower viewports a
+// ResizeObserver computes a CSS zoom factor that shrinks it to fit. Below
+// MIN_BOWL_SCALE we let it overflow and scroll horizontally rather than
+// make seats unreadable.
+const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
+const MIN_BOWL_SCALE = 0.5;
+
 type Props = {
   match: MatchWithAvailability;
   error?: string;
@@ -57,6 +64,26 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
   const [concessionCount, setConcessionCount] = useState(0);
   const [under17Count, setUnder17Count] = useState(0);
   const [under5Count, setUnder5Count] = useState(0);
+
+  // Auto-fit the bowl to the container width.
+  const bowlContainerRef = useRef<HTMLDivElement>(null);
+  const [bowlZoom, setBowlZoom] = useState<number | null>(null);
+  useEffect(() => {
+    const el = bowlContainerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w >= TOTAL_BOWL_WIDTH) {
+        setBowlZoom(1);
+      } else {
+        setBowlZoom(Math.max(MIN_BOWL_SCALE, w / TOTAL_BOWL_WIDTH));
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   function toggle(id: string) {
     if (booked.has(id)) return;
@@ -132,11 +159,17 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
           locale={locale}
         />
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-2 sm:p-6">
-          <div className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
-            {/* Shrink the whole bowl on phone — pitch + stands scale together
-                so seat columns stay aligned. CSS zoom collapses the layout
-                box (unlike transform: scale), so no empty space below. */}
-            <div className="[zoom:0.65] sm:[zoom:1]">
+          <div
+            ref={bowlContainerRef}
+            className="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0"
+          >
+            {/* Bowl renders at TOTAL_BOWL_WIDTH; zoom (set by the
+                ResizeObserver above) shrinks it to fit any container. zoom
+                collapses the layout box too, so no empty whitespace below. */}
+            <div
+              className="[zoom:0.65] sm:[zoom:1]"
+              style={bowlZoom != null ? { zoom: bowlZoom } : undefined}
+            >
               <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
             </div>
           </div>
