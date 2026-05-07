@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import HeroParallax from "@/components/HeroParallax";
 import { NewsPoster } from "@/components/NewsPoster";
 import { LAST_RESULT, LEAGUE, NEWS, RESULTS, STANDINGS } from "@/lib/club";
 import { getCurrency } from "@/lib/currency-server";
@@ -33,14 +34,7 @@ export default async function Home() {
               "radial-gradient(ellipse at 80% 20%, rgba(104,152,200,0.25), transparent 60%)",
           }}
         />
-        <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage:
-              "linear-gradient(135deg, white 1px, transparent 1px), linear-gradient(45deg, white 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
+        <HeroParallax className="absolute inset-0 opacity-[0.05]" />
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-sfc-navy-darker via-sfc-navy-darker/40 to-transparent" />
 
         <div className="sfc-container relative pb-24 pt-20 sm:pb-28 sm:pt-24">
