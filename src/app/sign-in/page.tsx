@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { signInAction, signInWithGoogleAction } from "@/lib/auth";
+import {
+  signInAction,
+  signInWithGoogleAction,
+  signInWithMicrosoftAction,
+} from "@/lib/auth";
 
 export const metadata = {
   title: "Sign in — Salisbury FC",
@@ -96,6 +100,17 @@ export default async function SignInPage({
         </button>
       </form>
 
+      <form action={signInWithMicrosoftAction} className="anim-fade-up mt-3">
+        <input type="hidden" name="next" value="/" />
+        <button
+          type="submit"
+          className="press inline-flex w-full items-center justify-center gap-3 rounded-full border border-stone-300 bg-white px-5 py-3 text-base font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50"
+        >
+          <MicrosoftMark />
+          Continue with Microsoft
+        </button>
+      </form>
+
       <p className="mt-6 text-center text-sm text-stone-600">
         New to Salisbury FC?{" "}
         <Link
@@ -143,6 +158,18 @@ function GoogleMark() {
         fill="#EA4335"
         d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.41-3.41C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.55l3.96 3.12C6.2 6.89 8.86 4.77 12 4.77z"
       />
+    </svg>
+  );
+}
+
+function MicrosoftMark() {
+  // Microsoft brand mark — four squares per their identity guidelines.
+  return (
+    <svg viewBox="0 0 23 23" className="h-5 w-5" aria-hidden>
+      <rect width="10" height="10" x="1" y="1" fill="#F25022" />
+      <rect width="10" height="10" x="12" y="1" fill="#7FBA00" />
+      <rect width="10" height="10" x="1" y="12" fill="#00A4EF" />
+      <rect width="10" height="10" x="12" y="12" fill="#FFB900" />
     </svg>
   );
 }

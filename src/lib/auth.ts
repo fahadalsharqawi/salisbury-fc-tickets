@@ -89,3 +89,28 @@ export async function signInWithGoogleAction(formData: FormData) {
   }
   redirect(data.url);
 }
+
+export async function signInWithMicrosoftAction(formData: FormData) {
+  const next = String(formData.get("next") ?? "/");
+  const supabase = await createClient();
+  // Supabase calls the Microsoft / Entra ID provider "azure".
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "azure",
+    options: {
+      redirectTo: await callbackUrl(next),
+      // openid + email + profile gets us the basic user info we display.
+      scopes: "openid email profile",
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  if (error || !data.url) {
+    redirect(
+      "/sign-in?error=" +
+        encodeURIComponent(
+          error?.message ??
+            "Microsoft sign-in isn't configured yet. Use email + password for now.",
+        ),
+    );
+  }
+  redirect(data.url);
+}
