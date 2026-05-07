@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
 import { NEWS } from "@/lib/club";
 import { localize, t } from "@/lib/i18n";
@@ -35,14 +34,11 @@ export default async function NewsPage() {
       </div>
 
       <div className="sfc-container py-10">
-        <MotionStagger as="ul" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
+        <ul className="stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((n) => (
-            <MotionItem
-              as="li"
+            <li
               key={n.slug}
-              whileHover={{ y: -3, boxShadow: "0 16px 36px -16px rgba(12,22,54,0.22)" }}
-              transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+              className="anim-fade-up lift overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
             >
               <Link href={`/news/${n.slug}`} className="block">
                 <div className="relative aspect-[16/9] overflow-hidden">
@@ -64,9 +60,9 @@ export default async function NewsPage() {
                   </span>
                 </div>
               </Link>
-            </MotionItem>
+            </li>
           ))}
-        </MotionStagger>
+        </ul>
       </div>
     </>
   );

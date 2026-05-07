@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
 import MobileNav from "@/components/MobileNav";
-import { PageTransition } from "@/components/motion/Motion";
 import ScrollReveal from "@/components/ScrollReveal";
 import { signOutAction } from "@/lib/auth";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
@@ -184,9 +183,7 @@ export default async function RootLayout({
           </div>
         </header>
 
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
+        <main className="flex-1">{children}</main>
 
         <footer className="bg-sfc-navy-darker text-white">
           {/* Partners band */}
