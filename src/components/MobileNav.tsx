@@ -20,6 +20,8 @@ type Props = {
 const NAV_KEYS = [
   { href: "/tickets", key: "nav.fixtures" },
   { href: "/club", key: "nav.club" },
+  { href: "/club/hospitality", key: "nav.hospitality" },
+  { href: "/live-commentaries", key: "nav.live-commentaries" },
   { href: "/news", key: "nav.news" },
   { href: "/contact", key: "nav.contact" },
   // /admin intentionally not surfaced — accessible by typing the URL.
