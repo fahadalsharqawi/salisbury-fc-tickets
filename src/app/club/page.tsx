@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import PersonCard from "@/components/PersonCard";
 import { LEAGUE, NEWS, SQUAD, STADIUM, STAFF, type Position } from "@/lib/club";
 import { localize, t, type Locale } from "@/lib/i18n";
@@ -114,18 +115,18 @@ export default async function ClubPage() {
                   )}
                 </span>
               </div>
-              <ul className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <MotionStagger as="ul" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" stagger={0.04}>
                 {byPosition[pos].map((p) => (
-                  <li key={p.slug}>
+                  <MotionItem as="li" key={p.slug}>
                     <PersonCard
                       href={`/club/squad/${p.slug}`}
                       photoUrl={p.photoUrl}
                       name={p.name}
                       meta={p.number ? `#${p.number}` : t(`position.${p.position}`, locale)}
                     />
-                  </li>
+                  </MotionItem>
                 ))}
-              </ul>
+              </MotionStagger>
             </div>
           ))}
         </section>
@@ -134,18 +135,18 @@ export default async function ClubPage() {
           <h2 className="sfc-display anim-fade-up mb-4 text-2xl font-bold">
             {t("club.staff-heading", locale)}
           </h2>
-          <ul className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <MotionStagger as="ul" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" stagger={0.04}>
             {STAFF.map((s) => (
-              <li key={s.slug}>
+              <MotionItem as="li" key={s.slug}>
                 <PersonCard
                   href={`/club/staff/${s.slug}`}
                   photoUrl={s.photoUrl}
                   name={s.name}
                   meta={localize(s.role, locale)}
                 />
-              </li>
+              </MotionItem>
             ))}
-          </ul>
+          </MotionStagger>
         </section>
 
         <section className="mt-12">
@@ -160,11 +161,14 @@ export default async function ClubPage() {
               {t("common.all-news", locale)}
             </Link>
           </div>
-          <ul className="stagger mt-4 grid gap-3">
+          <MotionStagger as="ul" className="mt-4 grid gap-3" stagger={0.05}>
             {NEWS.slice(0, 5).map((n) => (
-              <li
+              <MotionItem
+                as="li"
                 key={n.slug}
-                className="anim-fade-up lift rounded-xl border border-sfc-n-200 bg-white px-5 py-4"
+                whileHover={{ x: 4, boxShadow: "0 8px 22px -12px rgba(12,22,54,0.18)" }}
+                transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                className="rounded-xl border border-sfc-n-200 bg-white px-5 py-4"
               >
                 <Link
                   href={`/news/${n.slug}`}
@@ -177,9 +181,9 @@ export default async function ClubPage() {
                     {formatDate(n.date, locale)}
                   </span>
                 </Link>
-              </li>
+              </MotionItem>
             ))}
-          </ul>
+          </MotionStagger>
         </section>
 
         <div className="anim-fade-up mt-12 flex flex-wrap gap-3">
