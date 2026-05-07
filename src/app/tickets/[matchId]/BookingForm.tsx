@@ -351,9 +351,17 @@ function StandFrame({
   const frameClass = isMain
     ? "relative rounded-md bg-stone-200 shadow-[inset_0_2px_0_rgba(0,0,0,0.08)] ring-1 ring-stone-300"
     : "relative rounded-md bg-white/60 ring-1 ring-stone-200";
+  // Vertical labels (Main Stand, East Terrace) get rotated text that
+  // overlaps the seats once iOS upscales sub-12px text — hide on phone.
+  // Horizontal labels (North/South End) sit above/below the seat strip
+  // and don't have that problem.
+  const hideOnMobile = axis === "vertical";
+  const labelBase = `pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] [-webkit-text-size-adjust:100%] ${
+    hideOnMobile ? "hidden sm:block" : ""
+  }`;
   const labelClass = isMain
-    ? "pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] text-sfc-navy"
-    : "pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] text-stone-400";
+    ? `${labelBase} text-sfc-navy`
+    : `${labelBase} text-stone-400`;
   return (
     <div className={frameClass} style={{ padding: STAND_PADDING }}>
       {/* Roof indicator stripe — only on the covered Main Stand */}
