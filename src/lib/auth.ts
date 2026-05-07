@@ -114,3 +114,27 @@ export async function signInWithMicrosoftAction(formData: FormData) {
   }
   redirect(data.url);
 }
+
+export async function signInWithAppleAction(formData: FormData) {
+  const next = String(formData.get("next") ?? "/");
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "apple",
+    options: {
+      redirectTo: await callbackUrl(next),
+      // Apple returns first/last name only on the very first sign-in,
+      // so request both name and email scopes up front.
+      scopes: "name email",
+    },
+  });
+  if (error || !data.url) {
+    redirect(
+      "/sign-in?error=" +
+        encodeURIComponent(
+          error?.message ??
+            "Apple sign-in isn't configured yet. Use email + password for now.",
+        ),
+    );
+  }
+  redirect(data.url);
+}
