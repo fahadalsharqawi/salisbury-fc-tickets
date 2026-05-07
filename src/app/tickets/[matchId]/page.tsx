@@ -43,17 +43,17 @@ export default async function BookingFormPage({
 
   return (
     <>
-      {/* Page strip */}
+      {/* Page strip — compact on mobile so the seat map gets more vertical room */}
       <div className="bg-sfc-navy text-white">
-        <div className="sfc-container py-6">
+        <div className="sfc-container py-4 sm:py-6">
           <Link
             href="/tickets"
-            className="sfc-display text-[12px] font-semibold uppercase tracking-[0.14em] text-sfc-sky-light hover:text-white"
+            className="sfc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-sfc-sky-light hover:text-white sm:text-[12px]"
           >
             {t("form.back-to-fixtures", locale)}
           </Link>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-            <div>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-2 sm:mt-3 sm:gap-3">
+            <div className="min-w-0 flex-1">
               <div className="sfc-eyebrow sfc-eyebrow--on-dark flex items-center gap-2">
                 <span
                   className={
@@ -64,33 +64,33 @@ export default async function BookingFormPage({
                 >
                   {match.isHome ? t("common.home", locale) : t("common.away", locale)}
                 </span>
-                <span className="text-sfc-sky-light">
+                <span className="truncate text-sfc-sky-light">
                   {localize(match.competition, locale)}
                 </span>
               </div>
-              <h1 className="sfc-display mt-2 text-3xl font-bold leading-[1.05] sm:text-4xl">
+              <h1 className="sfc-display mt-1.5 text-2xl font-bold leading-[1.05] sm:mt-2 sm:text-4xl">
                 {t("brand.name", locale)}{" "}
                 <span className="text-sfc-sky-light">{t("common.vs", locale)}</span>{" "}
                 {localize(match.opponent, locale)}
               </h1>
-              <p className="mt-1 text-sm text-sfc-sky-light">
+              <p className="mt-1 text-xs text-sfc-sky-light sm:text-sm">
                 {formatLongKickoff(match.kickoff)}
               </p>
-              <p className="text-sm text-sfc-sky-light/80">
+              <p className="text-xs text-sfc-sky-light/80 sm:text-sm">
                 {localize(match.venue, locale)}
               </p>
             </div>
             <div className="text-end">
-              <div className="sfc-eyebrow sfc-eyebrow--on-dark">
+              <div className="sfc-eyebrow sfc-eyebrow--on-dark text-[10px] sm:text-xs">
                 {t("common.from", locale)}
               </div>
-              <div className="sfc-display mt-1 text-3xl font-bold leading-none">
-                {formatMoney(match.pricePerSeat, currency)}{" "}
-                <span className="text-base font-normal text-sfc-sky-light">
+              <div className="sfc-display mt-0.5 text-2xl font-bold leading-none sm:mt-1 sm:text-3xl">
+                {formatMoney(match.pricePerSeat, currency)}
+                <span className="ms-1 text-xs font-normal text-sfc-sky-light sm:text-base">
                   {t("form.from-per-seat", locale)}
                 </span>
               </div>
-              <div className="mt-1 text-xs text-sfc-sky-light/80">
+              <div className="mt-1 hidden text-xs text-sfc-sky-light/80 sm:block">
                 {t("form.main-stand-extra", locale, {
                   amount: formatMoney(MAIN_STAND_SURCHARGE, currency),
                 })}
