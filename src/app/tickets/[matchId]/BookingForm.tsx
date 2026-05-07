@@ -338,18 +338,33 @@ function StandFrame({
   label,
   children,
   axis,
+  kind = "terrace",
 }: {
   label: string;
   children: React.ReactNode;
   axis: "horizontal" | "vertical";
+  kind?: "main" | "terrace";
 }) {
+  // The Main Stand at the Ray Mac is the only fully covered, all-seater
+  // stand; the other three sides are open terraces. Reflect that visually.
+  const isMain = kind === "main";
+  const frameClass = isMain
+    ? "relative rounded-md bg-stone-200 shadow-[inset_0_2px_0_rgba(0,0,0,0.08)] ring-1 ring-stone-300"
+    : "relative rounded-md bg-white/60 ring-1 ring-stone-200";
+  const labelClass = isMain
+    ? "pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] text-sfc-navy"
+    : "pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] text-stone-400";
   return (
-    <div
-      className="relative rounded-md bg-white/70 ring-1 ring-stone-200"
-      style={{ padding: STAND_PADDING }}
-    >
+    <div className={frameClass} style={{ padding: STAND_PADDING }}>
+      {/* Roof indicator stripe — only on the covered Main Stand */}
+      {isMain && (
+        <div
+          className="pointer-events-none absolute inset-x-1 top-0 h-1 rounded-t-md bg-sfc-navy/85"
+          aria-hidden
+        />
+      )}
       <div
-        className="pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] text-stone-400"
+        className={labelClass}
         style={
           axis === "horizontal"
             ? { left: 8, right: 8, textAlign: "center", top: 2 }
@@ -362,7 +377,7 @@ function StandFrame({
               }
         }
       >
-        {label}
+        {isMain ? `${label} · Covered` : label}
       </div>
       {children}
     </div>
@@ -408,7 +423,7 @@ function SouthStand(p: SeatGridProps) {
 
 function WestStand(p: SeatGridProps) {
   return (
-    <StandFrame label={t("seats.main-stand", p.locale)} axis="vertical">
+    <StandFrame label={t("seats.main-stand", p.locale)} axis="vertical" kind="main">
       <div
         className="flex h-full items-stretch justify-end"
         style={{ gap: SEAT_GAP }}
@@ -511,7 +526,9 @@ function SeatBtn({
       className={[
         "block",
         facingClass,
-        "border text-[9px] font-semibold leading-none transition active:scale-[0.92]",
+        // Smaller font on phone (also gets clamped by CSS zoom). On
+        // tablet/desktop the seat is large enough for the column number.
+        "border text-[7px] sm:text-[9px] font-semibold leading-none transition active:scale-[0.92]",
         booked
           ? "cursor-not-allowed border-sfc-n-300 bg-sfc-n-200 text-sfc-n-400"
           : selected
@@ -523,7 +540,12 @@ function SeatBtn({
       style={{ width: SEAT_PX, height: SEAT_PX }}
     >
       <span className="sr-only">{id}</span>
-      <span aria-hidden>{label}</span>
+      {/* Hide the visible column number on phone — at full mobile zoom the
+          digit is unreadable anyway and just adds visual noise. The aria
+          label above still announces the seat ID for screen readers. */}
+      <span aria-hidden className="hidden sm:inline">
+        {label}
+      </span>
     </button>
   );
 }
