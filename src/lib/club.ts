@@ -43,41 +43,78 @@ export const STAFF: StaffMember[] = [
 
 export type Position = "Goalkeeper" | "Defender" | "Midfielder" | "Forward";
 
+// 2025/26 stats from the official salisburyfc.co.uk player profile pages.
+export type PlayerStats = {
+  appearances: number;
+  starts: number;
+  /** Pretty string ("4,500'") because the official site renders it that way. */
+  mins: string;
+  winPct: string;
+  goals: number;
+  bookings: number;
+  sentOff: number;
+};
+
 export type Player = {
   slug: string;
   name: string;
   position: Position;
   number?: number;
   photoUrl?: string;
+  stats?: PlayerStats;
 };
 
 export const SQUAD: Player[] = [
-  { slug: "will-buse", name: "Will Buse", position: "Goalkeeper", number: 1, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Will-Buse.jpg" },
+  { slug: "will-buse", name: "Will Buse", position: "Goalkeeper", number: 1, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Will-Buse.jpg",
+    stats: { appearances: 50, starts: 50, mins: "4,500'", winPct: "28%", goals: 0, bookings: 4, sentOff: 0 } },
   { slug: "lewis-gunstone-gray", name: "Lewis Gunstone-Gray", position: "Goalkeeper", number: 13, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/10/28153008/DSC_9108-e1769614234835.jpg" },
-  { slug: "josh-sommerton", name: "Josh Sommerton", position: "Defender", number: 3, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Josh-Sommerton.jpg" },
-  { slug: "camron-gbadebo", name: "Camron Gbadebo", position: "Defender", number: 4, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28151248/Salisbury-v-Hampton-and-Richmond-Borough-24th-January-2026-RE-67-e1769613455786.jpg" },
-  { slug: "tom-davies", name: "Tom Davies", position: "Defender", number: 16, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200429/Tom-Davies.jpg" },
-  { slug: "tom-cove", name: "Tom Cove", position: "Defender", number: 20, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200428/Tom-Cove.jpg" },
-  { slug: "dominic-revan", name: "Dominic Revan", position: "Defender", number: 24, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Dom-Revan.jpg" },
-  { slug: "richard-mcintyre", name: "Richard McIntyre", position: "Defender", number: 32, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104340/IMG_0188-e1772966641220.png" },
-  { slug: "ollie-morgan", name: "Ollie Morgan", position: "Defender", number: 33, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/10/22135522/Salisbury-v-Slough-Town-18th-October-2025-RE-35-e1761137763188.jpg" },
-  { slug: "peter-ojemen", name: "Peter Ojemen", position: "Defender", number: 34, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104609/IMG_1981-e1772966802778.png" },
-  { slug: "ronnie-harvey", name: "Ronnie Harvey", position: "Midfielder" },
-  { slug: "george-penn", name: "George Penn", position: "Midfielder", number: 6, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/03/08103256/SAL-VS-MAI-11-e1772965999271.jpg" },
-  { slug: "matt-briggs", name: "Matt Briggs", position: "Midfielder", number: 8, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Matt-Briggs.jpg" },
-  { slug: "josh-hedges", name: "Josh Hedges", position: "Midfielder", number: 14, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22135202/Salisbury-v-Laverstock-Ford-13th-September-2025-FA-Cup-RE-23-e1761137561175.jpg" },
-  { slug: "malachi-ogunleye", name: "Malachi Ogunleye", position: "Midfielder", number: 15, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145132/DSC_7751.jpg" },
+  { slug: "josh-sommerton", name: "Josh Sommerton", position: "Defender", number: 3, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Josh-Sommerton.jpg",
+    stats: { appearances: 36, starts: 35, mins: "3,060'", winPct: "33%", goals: 2, bookings: 1, sentOff: 0 } },
+  { slug: "camron-gbadebo", name: "Camron Gbadebo", position: "Defender", number: 4, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28151248/Salisbury-v-Hampton-and-Richmond-Borough-24th-January-2026-RE-67-e1769613455786.jpg",
+    stats: { appearances: 23, starts: 22, mins: "2,023'", winPct: "35%", goals: 0, bookings: 1, sentOff: 0 } },
+  { slug: "tom-davies", name: "Tom Davies", position: "Defender", number: 16, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200429/Tom-Davies.jpg",
+    stats: { appearances: 26, starts: 23, mins: "1,998'", winPct: "27%", goals: 1, bookings: 3, sentOff: 0 } },
+  { slug: "tom-cove", name: "Tom Cove", position: "Defender", number: 20, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200428/Tom-Cove.jpg",
+    stats: { appearances: 5, starts: 0, mins: "34'", winPct: "20%", goals: 0, bookings: 0, sentOff: 0 } },
+  { slug: "dominic-revan", name: "Dominic Revan", position: "Defender", number: 24, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Dom-Revan.jpg",
+    stats: { appearances: 48, starts: 46, mins: "4,164'", winPct: "29%", goals: 1, bookings: 4, sentOff: 0 } },
+  { slug: "richard-mcintyre", name: "Richard McIntyre", position: "Defender", number: 32, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104340/IMG_0188-e1772966641220.png",
+    stats: { appearances: 15, starts: 11, mins: "977'", winPct: "27%", goals: 0, bookings: 3, sentOff: 0 } },
+  { slug: "ollie-morgan", name: "Ollie Morgan", position: "Defender", number: 33, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/10/22135522/Salisbury-v-Slough-Town-18th-October-2025-RE-35-e1761137763188.jpg",
+    stats: { appearances: 39, starts: 38, mins: "3,425'", winPct: "33%", goals: 1, bookings: 1, sentOff: 0 } },
+  { slug: "peter-ojemen", name: "Peter Ojemen", position: "Defender", number: 34, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08104609/IMG_1981-e1772966802778.png",
+    stats: { appearances: 4, starts: 0, mins: "74'", winPct: "25%", goals: 0, bookings: 0, sentOff: 0 } },
+  { slug: "ronnie-harvey", name: "Ronnie Harvey", position: "Midfielder",
+    stats: { appearances: 3, starts: 0, mins: "121'", winPct: "0%", goals: 0, bookings: 1, sentOff: 0 } },
+  { slug: "george-penn", name: "George Penn", position: "Midfielder", number: 6, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/03/08103256/SAL-VS-MAI-11-e1772965999271.jpg",
+    stats: { appearances: 5, starts: 5, mins: "450'", winPct: "20%", goals: 1, bookings: 0, sentOff: 0 } },
+  { slug: "matt-briggs", name: "Matt Briggs", position: "Midfielder", number: 8, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200420/Matt-Briggs.jpg",
+    stats: { appearances: 26, starts: 19, mins: "1,758'", winPct: "23%", goals: 4, bookings: 0, sentOff: 0 } },
+  { slug: "josh-hedges", name: "Josh Hedges", position: "Midfielder", number: 14, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22135202/Salisbury-v-Laverstock-Ford-13th-September-2025-FA-Cup-RE-23-e1761137561175.jpg",
+    stats: { appearances: 42, starts: 32, mins: "3,080'", winPct: "33%", goals: 7, bookings: 1, sentOff: 0 } },
+  { slug: "malachi-ogunleye", name: "Malachi Ogunleye", position: "Midfielder", number: 15, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145132/DSC_7751.jpg",
+    stats: { appearances: 28, starts: 24, mins: "2,146'", winPct: "36%", goals: 0, bookings: 6, sentOff: 0 } },
   { slug: "ryan-penny", name: "Ryan Penny", position: "Midfielder", number: 17, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13201556/20240803-Squad-Shot-Penny.jpg" },
-  { slug: "josh-keeya", name: "Josh Keeya", position: "Midfielder", number: 18, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200419/Josh-Keeya.jpg" },
-  { slug: "evander-grubb", name: "Evander Grubb", position: "Midfielder", number: 19, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Evander-Grubb.jpg" },
-  { slug: "max-jolliffe", name: "Max Jolliffe", position: "Midfielder", number: 27, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/31211631/IMG_8643-e1769894248158.jpg" },
-  { slug: "harry-lee", name: "Harry Lee", position: "Midfielder", number: 30, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22140323/Salisbury-v-Torquay-United-4th-October-2025-31-1-e1761138244298.jpg" },
-  { slug: "balraj-landa", name: "Balraj Landa", position: "Midfielder", number: 31, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08103819/IMG_0222-e1772966356522.png" },
-  { slug: "ollie-bray", name: "Ollie Bray", position: "Forward", number: 9, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200425/Ollie-Bray.jpg" },
-  { slug: "tommy-willard", name: "Tommy Willard", position: "Forward", number: 10, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Tommy-Willard.jpg" },
-  { slug: "nathan-odokonyero", name: "Nathan Odokonyero", position: "Forward", number: 11, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/28152349/SAL-VS-HAM-11-e1769613903198.jpg" },
-  { slug: "noah-coppin", name: "Noah Coppin", position: "Forward", number: 22, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200424/Noah-Coppin.jpg" },
-  { slug: "mohammad-dabre", name: "Mohammad Dabre", position: "Forward", number: 25, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145356/SAL-VS-WOR-20.jpg" },
+  { slug: "josh-keeya", name: "Josh Keeya", position: "Midfielder", number: 18, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200419/Josh-Keeya.jpg",
+    stats: { appearances: 47, starts: 36, mins: "3,073'", winPct: "28%", goals: 4, bookings: 4, sentOff: 0 } },
+  { slug: "evander-grubb", name: "Evander Grubb", position: "Midfielder", number: 19, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200413/Evander-Grubb.jpg",
+    stats: { appearances: 19, starts: 4, mins: "411'", winPct: "21%", goals: 0, bookings: 0, sentOff: 0 } },
+  { slug: "max-jolliffe", name: "Max Jolliffe", position: "Midfielder", number: 27, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/31211631/IMG_8643-e1769894248158.jpg",
+    stats: { appearances: 16, starts: 15, mins: "1,117'", winPct: "31%", goals: 2, bookings: 2, sentOff: 0 } },
+  { slug: "harry-lee", name: "Harry Lee", position: "Midfielder", number: 30, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/09/22140323/Salisbury-v-Torquay-United-4th-October-2025-31-1-e1761138244298.jpg",
+    stats: { appearances: 25, starts: 11, mins: "991'", winPct: "36%", goals: 0, bookings: 3, sentOff: 0 } },
+  { slug: "balraj-landa", name: "Balraj Landa", position: "Midfielder", number: 31, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/02/08103819/IMG_0222-e1772966356522.png",
+    stats: { appearances: 2, starts: 0, mins: "17'", winPct: "0%", goals: 0, bookings: 0, sentOff: 0 } },
+  { slug: "ollie-bray", name: "Ollie Bray", position: "Forward", number: 9, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200425/Ollie-Bray.jpg",
+    stats: { appearances: 27, starts: 4, mins: "632'", winPct: "30%", goals: 0, bookings: 0, sentOff: 0 } },
+  { slug: "tommy-willard", name: "Tommy Willard", position: "Forward", number: 10, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200431/Tommy-Willard.jpg",
+    stats: { appearances: 37, starts: 24, mins: "2,158'", winPct: "35%", goals: 6, bookings: 0, sentOff: 0 } },
+  { slug: "nathan-odokonyero", name: "Nathan Odokonyero", position: "Forward", number: 11, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2026/01/28152349/SAL-VS-HAM-11-e1769613903198.jpg",
+    stats: { appearances: 20, starts: 16, mins: "1,376'", winPct: "30%", goals: 7, bookings: 0, sentOff: 0 } },
+  { slug: "noah-coppin", name: "Noah Coppin", position: "Forward", number: 22, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/08/13200424/Noah-Coppin.jpg",
+    stats: { appearances: 50, starts: 37, mins: "3,355'", winPct: "28%", goals: 16, bookings: 5, sentOff: 0 } },
+  { slug: "mohammad-dabre", name: "Mohammad Dabre", position: "Forward", number: 25, photoUrl: "https://media.touchlinefc.co.uk/salisbury/2025/12/28145356/SAL-VS-WOR-20.jpg",
+    stats: { appearances: 25, starts: 23, mins: "1,958'", winPct: "32%", goals: 0, bookings: 5, sentOff: 1 } },
 ];
 
 export function getPlayer(slug: string): Player | undefined {

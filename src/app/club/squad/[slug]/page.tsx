@@ -121,6 +121,26 @@ export default async function PlayerPage({ params }: { params: Promise<Params> }
               </p>
             </section>
 
+            {player.stats && (
+              <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="sfc-display text-lg font-bold">2025/26 stats</h2>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-sfc-n-500">
+                    National League South
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <StatTile label="Appearances" value={String(player.stats.appearances)} />
+                  <StatTile label="Starts" value={String(player.stats.starts)} />
+                  <StatTile label="Mins" value={player.stats.mins} />
+                  <StatTile label="Win %" value={player.stats.winPct} />
+                  <StatTile label="Goals" value={String(player.stats.goals)} accent />
+                  <StatTile label="Bookings" value={String(player.stats.bookings)} />
+                  <StatTile label="Sent off" value={String(player.stats.sentOff)} />
+                </div>
+              </section>
+            )}
+
             <section className="rounded-2xl border border-sfc-n-200 bg-white p-5 sm:p-6">
               <h2 className="sfc-display text-lg font-bold">Profile</h2>
               <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -196,6 +216,37 @@ function Field({ label, value }: { label: string; value: string }) {
         {label}
       </div>
       <div className="mt-1 text-sm font-semibold text-sfc-ink">{value}</div>
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border ${
+        accent
+          ? "border-sfc-navy bg-sfc-navy text-white"
+          : "border-sfc-n-200 bg-sfc-bone text-sfc-ink"
+      } p-3 text-center`}
+    >
+      <div className="sfc-display text-xl font-bold leading-none sm:text-2xl">
+        {value}
+      </div>
+      <div
+        className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+          accent ? "text-sfc-sky-light" : "text-sfc-n-500"
+        }`}
+      >
+        {label}
+      </div>
     </div>
   );
 }
