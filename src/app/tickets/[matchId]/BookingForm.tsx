@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBookingAction } from "@/lib/actions";
@@ -527,32 +526,19 @@ function SeatBtn({
           ? "rounded-l-md"
           : "rounded-r-md";
 
-  const reduce = useReducedMotion();
   return (
-    <motion.button
+    <button
       type="button"
       onClick={onClick}
       aria-label={`Seat ${id}${booked ? " (taken)" : ""}`}
       aria-pressed={selected}
       disabled={booked}
-      whileHover={reduce || booked ? undefined : { scale: 1.08 }}
-      whileTap={reduce || booked ? undefined : { scale: 0.88 }}
-      animate={
-        reduce || booked
-          ? undefined
-          : selected
-            ? { scale: [1, 1.18, 1] }
-            : { scale: 1 }
-      }
-      transition={
-        selected
-          ? { duration: 0.32, ease: [0.16, 1, 0.3, 1] }
-          : { type: "spring", stiffness: 600, damping: 26 }
-      }
       className={[
         "block",
         facingClass,
-        "border text-[7px] sm:text-[9px] font-semibold leading-none",
+        // Smaller font on phone (also gets clamped by CSS zoom). On
+        // tablet/desktop the seat is large enough for the column number.
+        "border text-[7px] sm:text-[9px] font-semibold leading-none transition active:scale-[0.92]",
         booked
           ? "cursor-not-allowed border-sfc-n-300 bg-sfc-n-200 text-sfc-n-400"
           : selected
@@ -565,6 +551,8 @@ function SeatBtn({
     >
       <span className="sr-only">{id}</span>
       {booked ? (
+        // Booked seats render an "×" so it's obvious they're taken even
+        // when zoomed out on phone where the seat is just a small tile.
         <span
           aria-hidden
           className="block leading-none text-sfc-n-500"
@@ -573,11 +561,13 @@ function SeatBtn({
           ×
         </span>
       ) : (
+        // Available seats show the column number on tablet+ only — at
+        // full mobile zoom the digit is unreadable.
         <span aria-hidden className="hidden sm:inline">
           {label}
         </span>
       )}
-    </motion.button>
+    </button>
   );
 }
 
@@ -658,7 +648,6 @@ function Summary({
   currency: Currency;
   locale: Locale;
 }) {
-  const formatted = formatMoney(total, currency);
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -666,63 +655,19 @@ function Summary({
           <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
             {t("seats.your-selection", locale)}
           </div>
-          <div className="mt-1 text-sm font-semibold text-stone-900 min-h-[1.25rem]">
-            <AnimatePresence mode="wait" initial={false}>
-              {selected.length === 0 ? (
-                <motion.span
-                  key="empty"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.18 }}
-                  className="text-stone-500"
-                >
-                  {t("seats.no-seats-selected", locale)}
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="list"
-                  layout
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-wrap gap-1.5"
-                >
-                  <AnimatePresence initial={false}>
-                    {selected.map((id) => (
-                      <motion.span
-                        key={id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        className="inline-flex items-center rounded-md bg-sfc-bone px-1.5 py-0.5 text-[11px] font-mono text-sfc-navy"
-                      >
-                        {id}
-                      </motion.span>
-                    ))}
-                  </AnimatePresence>
-                </motion.span>
-              )}
-            </AnimatePresence>
+          <div className="mt-1 text-sm font-semibold text-stone-900">
+            {selected.length === 0 ? (
+              <span className="text-stone-500">{t("seats.no-seats-selected", locale)}</span>
+            ) : (
+              <span className="break-words">{selected.join(", ")}</span>
+            )}
           </div>
         </div>
         <div className="text-right">
           <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
             {t("common.total", locale)}
           </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={formatted}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="text-2xl font-semibold tabular-nums"
-            >
-              {formatted}
-            </motion.div>
-          </AnimatePresence>
+          <div className="text-2xl font-semibold">{formatMoney(total, currency)}</div>
         </div>
       </div>
     </div>
@@ -818,39 +763,24 @@ function TierRow({
         </div>
       </div>
       <div className="inline-flex items-center gap-2">
-        <motion.button
+        <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
           disabled={value === 0}
           aria-label={`Reduce ${label}`}
-          whileTap={value === 0 ? undefined : { scale: 0.85 }}
-          transition={{ type: "spring", stiffness: 500, damping: 26 }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 sm:text-lg"
+          className="press flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 sm:text-lg"
         >
           −
-        </motion.button>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={value}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.15 }}
-            className="w-7 text-center text-base font-semibold tabular-nums sm:w-6 sm:text-sm"
-          >
-            {value}
-          </motion.span>
-        </AnimatePresence>
-        <motion.button
+        </button>
+        <span className="w-7 text-center text-base font-semibold tabular-nums sm:w-6 sm:text-sm">{value}</span>
+        <button
           type="button"
           onClick={() => onChange(value + 1)}
           aria-label={`Add ${label}`}
-          whileTap={{ scale: 0.85 }}
-          transition={{ type: "spring", stiffness: 500, damping: 26 }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 hover:bg-stone-100 sm:h-9 sm:w-9 sm:text-lg"
+          className="press flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl leading-none text-stone-700 transition hover:bg-stone-100 sm:h-9 sm:w-9 sm:text-lg"
         >
           +
-        </motion.button>
+        </button>
       </div>
     </li>
   );
@@ -872,32 +802,32 @@ function PaymentTabs({
     { id: "apple", label: t("pay.tab.apple", locale) },
     { id: "google", label: t("pay.tab.google", locale) },
   ];
+  const activeIndex = tabs.findIndex((t) => t.id === value);
   return (
     <div className="relative mt-3 flex rounded-lg border border-stone-200 bg-stone-100 p-1 text-sm">
-      {tabs.map((tab) => {
-        const isActive = value === tab.id;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            aria-pressed={isActive}
-            className={`relative z-10 flex-1 rounded-md px-3 py-1.5 font-medium transition-colors duration-200 ${
-              isActive ? "text-stone-900" : "text-stone-600 hover:text-stone-900"
-            }`}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="payment-tab-indicator"
-                aria-hidden
-                className="absolute inset-0 z-[-1] rounded-md bg-white shadow-sm"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
-            {tab.label}
-          </button>
-        );
-      })}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-1 left-1 rounded-md bg-white shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{
+          width: `calc((100% - 0.5rem) / ${tabs.length})`,
+          transform: `translateX(${activeIndex * 100}%)`,
+        }}
+      />
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => onChange(t.id)}
+          aria-pressed={value === t.id}
+          className={`relative z-10 flex-1 rounded-md px-3 py-1.5 font-medium transition-colors duration-200 ${
+            value === t.id
+              ? "text-stone-900"
+              : "text-stone-600 hover:text-stone-900"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -1011,17 +941,14 @@ function QuickPick({
       </span>
       <div className="flex flex-wrap gap-1.5">
         {presets.map((n) => (
-          <motion.button
+          <button
             key={n}
             type="button"
             onClick={() => onPick(n)}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="rounded-full border border-sfc-n-200 bg-sfc-bone px-3 py-1 text-xs font-semibold text-sfc-n-700 hover:border-sfc-navy hover:bg-white hover:text-sfc-navy"
+            className="press rounded-full border border-sfc-n-200 bg-sfc-bone px-3 py-1 text-xs font-semibold text-sfc-n-700 transition hover:border-sfc-navy hover:bg-white hover:text-sfc-navy"
           >
             {t("seats.together", locale, { n })}
-          </motion.button>
+          </button>
         ))}
       </div>
       <span className="ms-auto text-xs text-stone-500">
@@ -1055,42 +982,37 @@ function MobileCheckoutBar({
   locale: Locale;
 }) {
   return (
-    <AnimatePresence>
-      {count > 0 && (
-        <motion.div
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "100%", opacity: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          className="fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] lg:hidden"
-        >
-          <div className="mx-auto flex max-w-md items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                {t("pay.mobile-cta-line", locale, {
-                  n: count,
-                  seats: count === 1 ? t("common.seat", locale) : t("common.seats", locale),
-                  amount: formatMoney(total, currency),
-                })}
-              </div>
-              <div className="truncate text-xs text-stone-500">
-                {t("pay.mobile-cta-sub", locale)}
-              </div>
-            </div>
-            <motion.a
-              href="#checkout"
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 24 }}
-              className={`sfc-btn sfc-btn--primary sfc-btn--sm ${
-                disabled ? "pointer-events-none opacity-60" : ""
-              }`}
-            >
-              {t("common.continue", locale)}
-            </motion.a>
+    <div
+      aria-hidden={count === 0}
+      className={`fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-md transition-transform duration-300 lg:hidden ${
+        count === 0
+          ? "pointer-events-none translate-y-full opacity-0"
+          : "translate-y-0 opacity-100 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)]"
+      }`}
+    >
+      <div className="mx-auto flex max-w-md items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+            {t("pay.mobile-cta-line", locale, {
+              n: count,
+              seats: count === 1 ? t("common.seat", locale) : t("common.seats", locale),
+              amount: formatMoney(total, currency),
+            })}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          <div className="truncate text-xs text-stone-500">
+            {t("pay.mobile-cta-sub", locale)}
+          </div>
+        </div>
+        <a
+          href="#checkout"
+          className={`sfc-btn sfc-btn--primary sfc-btn--sm press ${
+            disabled ? "pointer-events-none opacity-60" : ""
+          }`}
+        >
+          {t("common.continue", locale)}
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -1111,19 +1033,12 @@ function PayButton({
   const isDisabled = disabled || pending;
   const amount = formatMoney(total, currency);
 
-  const press = isDisabled ? undefined : { scale: 0.97 };
-  const hover = isDisabled ? undefined : { scale: 1.01 };
-  const spring = { type: "spring" as const, stiffness: 380, damping: 26 };
-
   if (method === "apple") {
     return (
-      <motion.button
+      <button
         type="submit"
         disabled={isDisabled}
-        whileHover={hover}
-        whileTap={press}
-        transition={spring}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-base font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
+        className="press inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-base font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
       >
         {pending ? (
           <PendingLabel text={t("pay.pending.apple", locale)} />
@@ -1133,18 +1048,15 @@ function PayButton({
             <span>{t("pay.button.apple-pay", locale, { amount })}</span>
           </>
         )}
-      </motion.button>
+      </button>
     );
   }
   if (method === "google") {
     return (
-      <motion.button
+      <button
         type="submit"
         disabled={isDisabled}
-        whileHover={hover}
-        whileTap={press}
-        transition={spring}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-base font-semibold text-stone-900 ring-1 ring-stone-300 hover:bg-stone-50 hover:shadow-md disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
+        className="press inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-base font-semibold text-stone-900 ring-1 ring-stone-300 transition hover:bg-stone-50 hover:shadow-md disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
       >
         {pending ? (
           <PendingLabel text={t("pay.pending.google", locale)} tone="dark" />
@@ -1154,24 +1066,21 @@ function PayButton({
             <span>{t("pay.button.google-pay", locale, { amount })}</span>
           </>
         )}
-      </motion.button>
+      </button>
     );
   }
   return (
-    <motion.button
+    <button
       type="submit"
       disabled={isDisabled}
-      whileHover={hover}
-      whileTap={press}
-      transition={spring}
-      className="sfc-btn sfc-btn--primary w-full disabled:cursor-not-allowed disabled:bg-sfc-n-300 disabled:shadow-none"
+      className="sfc-btn sfc-btn--primary press w-full disabled:cursor-not-allowed disabled:bg-sfc-n-300 disabled:shadow-none"
     >
       {pending ? (
         <PendingLabel text={t("pay.pending.card", locale)} />
       ) : (
         <span>{t("pay.button.card", locale, { amount })}</span>
       )}
-    </motion.button>
+    </button>
   );
 }
 

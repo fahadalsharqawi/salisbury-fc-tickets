@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { cancelBookingAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency-server";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
@@ -182,18 +181,16 @@ export default async function ConfirmationPage({
           style={{ ['--anim-delay' as string]: '1500ms' }}
         >
           <Label>{t("confirm.seats", locale)}</Label>
-          <MotionStagger className="mt-2 flex flex-wrap gap-2" stagger={0.04} dir="ltr">
+          <div className="stagger mt-2 flex flex-wrap gap-2" dir="ltr">
             {booking.seats.map((s) => (
-              <MotionItem
-                as="span"
+              <span
                 key={s}
-                variant="scaleIn"
-                className="rounded-md bg-stone-900 px-3 py-1 text-sm font-medium text-white"
+                className="anim-scale-in rounded-md bg-stone-900 px-3 py-1 text-sm font-medium text-white"
               >
                 {s}
-              </MotionItem>
+              </span>
             ))}
-          </MotionStagger>
+          </div>
           {tiers && (
             <ul className="mt-4 space-y-1 text-sm">
               <TierLine label={tierLabel("adult")} count={booking.adultCount} price={tiers.adult} currency={currency} />

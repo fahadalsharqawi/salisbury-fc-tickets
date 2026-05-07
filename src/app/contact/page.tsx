@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { submitContactAction } from "@/lib/actions";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
@@ -50,7 +49,7 @@ export default async function ContactPage({
                 {t("contact.club-office", locale)}
               </h2>
 
-              <MotionStagger as="dl" className="mt-6 space-y-5 text-sm" stagger={0.06}>
+              <dl className="mt-6 space-y-5 text-sm">
                 <InfoRow icon="pin" label={t("contact.address", locale)}>
                   <a
                     href={`https://www.google.com/maps?q=${encodeURIComponent(MAP_QUERY)}`}
@@ -90,7 +89,7 @@ export default async function ContactPage({
                     {t("contact.hours-matchday", locale)}
                   </span>
                 </InfoRow>
-              </MotionStagger>
+              </dl>
             </section>
 
             {/* Map placeholder */}
@@ -224,7 +223,7 @@ function InfoRow({
   children: React.ReactNode;
 }) {
   return (
-    <MotionItem variant="slideRight" className="grid grid-cols-[40px_1fr] items-start gap-3">
+    <div className="grid grid-cols-[40px_1fr] items-start gap-3">
       <span
         aria-hidden
         className="mt-0.5 grid h-10 w-10 place-items-center rounded-full bg-sfc-bone text-sfc-navy"
@@ -239,7 +238,7 @@ function InfoRow({
           {children}
         </dd>
       </div>
-    </MotionItem>
+    </div>
   );
 }
 

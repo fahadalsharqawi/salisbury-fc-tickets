@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import HeroParallax from "@/components/HeroParallax";
-import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
 import { LAST_RESULT, LEAGUE, NEWS, RESULTS, STANDINGS } from "@/lib/club";
 import { getCurrency } from "@/lib/currency-server";
@@ -237,10 +236,7 @@ export default async function Home() {
       {/* SEASON STATS — slim band */}
       <section className="bg-sfc-bone">
         <div className="sfc-container py-12">
-          <MotionStagger
-            className="grid gap-0 overflow-hidden rounded-2xl border border-sfc-n-200 bg-white sm:grid-cols-2 lg:grid-cols-4"
-            stagger={0.08}
-          >
+          <div className="grid gap-0 overflow-hidden rounded-2xl border border-sfc-n-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
             <Stat label={t("stats.league", locale)} value={localize(LEAGUE.league, locale)} small />
             <Stat
               label={t("stats.position", locale)}
@@ -252,7 +248,7 @@ export default async function Home() {
               value={`${LEAGUE.won}W ${LEAGUE.drawn}D ${LEAGUE.lost}L`}
               small
             />
-          </MotionStagger>
+          </div>
         </div>
       </section>
 
@@ -275,14 +271,11 @@ export default async function Home() {
               {t("common.see-all", locale)}
             </Link>
           </div>
-          <MotionStagger as="ul" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
+          <ul className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {matches.slice(0, 6).map((m) => (
-              <MotionItem
-                as="li"
+              <li
                 key={m.id}
-                whileHover={{ y: -3, boxShadow: "0 16px 36px -18px rgba(12,22,54,0.28)" }}
-                transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+                className="anim-fade-up lift overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
               >
                 <FixtureCrests
                   opponent={m.opponent}
@@ -326,9 +319,9 @@ export default async function Home() {
                     </Link>
                   </div>
                 </div>
-              </MotionItem>
+              </li>
             ))}
-          </MotionStagger>
+          </ul>
         </div>
       </section>
 
@@ -435,15 +428,11 @@ export default async function Home() {
                   </h2>
                 </div>
               </div>
-              <MotionStagger
-                as="ul"
-                className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white divide-y divide-sfc-n-100"
-                stagger={0.05}
-              >
+              <ul className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white divide-y divide-sfc-n-100">
                 {RESULTS.map((r, i) => {
                   const result = r.scoreFor > r.scoreAgainst ? "W" : r.scoreFor < r.scoreAgainst ? "L" : "D";
                   return (
-                    <MotionItem as="li" key={i} className="flex flex-1 items-center gap-3 px-5 py-4">
+                    <li key={i} className="flex flex-1 items-center gap-3 px-5 py-4">
                       <span className={`sfc-form-chip sfc-form-chip--${result} h-9 w-9 text-[15px]`}>
                         {result}
                       </span>
@@ -465,10 +454,10 @@ export default async function Home() {
                         <span className="px-1 text-sfc-n-300">–</span>
                         {r.scoreAgainst}
                       </div>
-                    </MotionItem>
+                    </li>
                   );
                 })}
-              </MotionStagger>
+              </ul>
               <div className="mt-3 text-end">
                 <Link
                   href="/club"
@@ -500,14 +489,14 @@ export default async function Home() {
             </Link>
           </div>
 
-          <MotionStagger className="grid gap-7 lg:grid-cols-[1.6fr_1fr]" stagger={0.1}>
+          <div className="grid gap-7 lg:grid-cols-[1.6fr_1fr]">
             {NEWS[0] && <FeatureCard article={NEWS[0]} locale={locale} />}
-            <MotionStagger className="flex flex-col" stagger={0.06}>
+            <div className="flex flex-col">
               {NEWS.slice(1, 4).map((n) => (
                 <SmallRow key={n.slug} article={n} locale={locale} />
               ))}
-            </MotionStagger>
-          </MotionStagger>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -535,8 +524,8 @@ function Stat({
   small?: boolean;
 }) {
   return (
-    <MotionItem
-      className={`px-6 py-6 sm:border-l sm:border-sfc-n-200 sm:first:border-l-0 ${
+    <div
+      className={`anim-fade-up px-6 py-6 sm:border-l sm:border-sfc-n-200 sm:first:border-l-0 ${
         accent ? "bg-sfc-bone" : ""
       }`}
     >
@@ -550,7 +539,7 @@ function Stat({
       >
         {value}
       </div>
-    </MotionItem>
+    </div>
   );
 }
 
@@ -643,12 +632,9 @@ type Article = (typeof import("@/lib/club"))["NEWS"][number];
 
 function FeatureCard({ article, locale }: { article: Article; locale: Locale }) {
   return (
-    <MotionItem
-      as={Link}
+    <Link
       href={`/news/${article.slug}`}
-      whileHover={{ y: -3, boxShadow: "0 16px 36px -16px rgba(12,22,54,0.22)" }}
-      transition={{ type: "spring", stiffness: 300, damping: 26 }}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+      className="group anim-fade-up flex flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(12,22,54,0.14)]"
     >
       <div className="relative aspect-[16/9] overflow-hidden">
         <NewsPoster article={article} locale={locale} size="feature" />
@@ -672,7 +658,7 @@ function FeatureCard({ article, locale }: { article: Article; locale: Locale }) 
           </span>
         </div>
       </div>
-    </MotionItem>
+    </Link>
   );
 }
 
@@ -684,12 +670,9 @@ function SmallRow({
   locale: Locale;
 }) {
   return (
-    <MotionItem
-      as={Link}
+    <Link
       href={`/news/${article.slug}`}
-      whileHover={{ x: 4 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className="grid grid-cols-[96px_1fr] items-stretch gap-4 border-b border-sfc-n-200 py-5 first:pt-0 last:border-b-0 hover:bg-white"
+      className="anim-fade-up grid grid-cols-[96px_1fr] items-stretch gap-4 border-b border-sfc-n-200 py-5 transition first:pt-0 last:border-b-0 hover:bg-white"
     >
       <div className="relative aspect-[4/3] overflow-hidden rounded-md">
         <NewsPoster article={article} locale={locale} size="thumb" showTitle={false} />
@@ -702,7 +685,7 @@ function SmallRow({
           {article.title[locale]}
         </span>
       </div>
-    </MotionItem>
+    </Link>
   );
 }
 

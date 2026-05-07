@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 
 export const metadata = {
   title: "Hospitality — Salisbury FC",
@@ -60,14 +59,11 @@ export default function HospitalityPage() {
       </div>
 
       <div className="sfc-container py-10">
-        <MotionStagger as="section" className="grid gap-5 sm:grid-cols-2" stagger={0.1}>
+        <section className="grid gap-5 sm:grid-cols-2">
           {PACKAGES.map((p) => (
-            <MotionItem
-              as="article"
+            <article
               key={p.title}
-              whileHover={{ y: -3, boxShadow: "0 18px 36px -18px rgba(12,22,54,0.22)" }}
-              transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="flex flex-col rounded-2xl border border-sfc-n-200 bg-white p-6"
+              className="anim-fade-up flex flex-col rounded-2xl border border-sfc-n-200 bg-white p-6"
             >
               <h2 className="sfc-display text-xl font-bold">{p.title}</h2>
               <p className="mt-1 text-sm text-sfc-n-600">{p.tagline}</p>
@@ -93,9 +89,9 @@ export default function HospitalityPage() {
               >
                 {p.cta}
               </a>
-            </MotionItem>
+            </article>
           ))}
-        </MotionStagger>
+        </section>
 
         <section className="anim-fade-up mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-sfc-navy to-sfc-navy-deep p-6 text-white sm:p-8">
           <div className="sfc-eyebrow sfc-eyebrow--on-dark">Giveaway</div>
