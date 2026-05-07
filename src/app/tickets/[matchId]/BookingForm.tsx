@@ -45,7 +45,9 @@ const SOUTH_H = unit(S.rows) + STAND_PADDING * 2;
 // MIN_BOWL_SCALE we let it overflow and scroll horizontally rather than
 // make seats unreadable.
 const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
-const MIN_BOWL_SCALE = 0.5;
+// Allow shrinking down to 0.4 — at 24px base × 0.4 = ~10px seats, which is
+// tight but still tappable. Below this we let the bowl overflow and scroll.
+const MIN_BOWL_SCALE = 0.4;
 
 type Props = {
   match: MatchWithAvailability;

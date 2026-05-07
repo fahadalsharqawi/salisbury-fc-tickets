@@ -66,9 +66,12 @@ export default function MobileNav({ locale, currency }: Props) {
         </svg>
       </button>
 
-      {/* Sheet */}
+      {/* Sheet — invisible + pointer-events-none when closed so the panel
+          can't render visibly even if the slide-out transform fails. */}
       <div
-        className={`fixed inset-0 z-[60] lg:hidden ${open ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-[60] lg:hidden ${
+          open ? "" : "invisible pointer-events-none"
+        }`}
         aria-hidden={!open}
       >
         {/* Scrim */}
