@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import PersonCard from "@/components/PersonCard";
 import { LEAGUE, NEWS, SQUAD, STADIUM, STAFF, type Position } from "@/lib/club";
 import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
@@ -192,59 +192,6 @@ export default async function ClubPage() {
         </div>
       </div>
     </>
-  );
-}
-
-function PersonCard({
-  href,
-  photoUrl,
-  name,
-  meta,
-}: {
-  href: string;
-  photoUrl?: string;
-  name: string;
-  meta: string;
-}) {
-  // Initials shown in the placeholder if no photo is available.
-  const initials = name
-    .split(" ")
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <Link
-      href={href}
-      className="anim-fade-up lift group block overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
-    >
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-sfc-bone">
-        {photoUrl ? (
-          <Image
-            src={photoUrl}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="sfc-display text-3xl font-bold text-sfc-n-400">
-              {initials}
-            </span>
-          </div>
-        )}
-      </div>
-      <div className="px-3 py-3">
-        <div className="sfc-display text-[13px] font-bold leading-tight text-sfc-ink sm:text-sm">
-          {name}
-        </div>
-        <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-sfc-n-500 sm:text-xs">
-          {meta}
-        </div>
-      </div>
-    </Link>
   );
 }
 
