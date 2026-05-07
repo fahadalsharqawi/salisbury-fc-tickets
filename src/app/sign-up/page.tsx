@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  signInWithAppleAction,
   signInWithGoogleAction,
   signInWithMicrosoftAction,
   signUpAction,
@@ -121,6 +122,17 @@ export default async function SignUpPage({
         </button>
       </form>
 
+      <form action={signInWithAppleAction} className="anim-fade-up mt-3">
+        <input type="hidden" name="next" value="/" />
+        <button
+          type="submit"
+          className="press inline-flex w-full items-center justify-center gap-3 rounded-full bg-black px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-stone-900"
+        >
+          <AppleMark />
+          Sign in with Apple
+        </button>
+      </form>
+
       <p className="mt-6 text-center text-sm text-stone-600">
         Already have an account?{" "}
         <Link
@@ -164,6 +176,14 @@ function MicrosoftMark() {
       <rect width="10" height="10" x="12" y="1" fill="#7FBA00" />
       <rect width="10" height="10" x="1" y="12" fill="#00A4EF" />
       <rect width="10" height="10" x="12" y="12" fill="#FFB900" />
+    </svg>
+  );
+}
+
+function AppleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden fill="currentColor">
+      <path d="M16.365 1.43c0 1.14-.46 2.28-1.21 3.09-.79.86-2.06 1.5-3.09 1.42-.13-1.12.42-2.27 1.13-3.02.79-.85 2.13-1.49 3.17-1.49zM20.5 17.55c-.55 1.27-1.21 2.49-2.18 3.55-.83.92-1.84 2.06-3.09 2.07-1.21.02-1.6-.79-3.39-.78-1.79.01-2.21.79-3.42.77-1.25-.02-2.21-1.04-3.04-1.96-2.32-2.58-4.1-7.27-1.71-10.46 1.18-1.58 3.31-2.58 5.21-2.61 1.27-.02 2.46.86 3.24.86.78 0 2.24-1.06 3.78-.91.64.03 2.45.26 3.61 1.96-.09.06-2.16 1.27-2.13 3.78.03 3.01 2.65 4.01 2.69 4.03-.02.07-.42 1.45-1.39 2.7z" />
     </svg>
   );
 }
