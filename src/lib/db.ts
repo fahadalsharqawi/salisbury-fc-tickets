@@ -128,23 +128,22 @@ async function listMatchesImpl(
   if (matchRes.error) throw new Error(matchRes.error.message);
   const matchRows = matchRes.data ?? [];
 
-  // Aggregate seat counts per match in one round-trip via the SQL `in` filter.
-  // Supabase caps a single SELECT at 1000 rows by default, so we explicitly
-  // request a wide range. Range header is the recommended way to bypass the
-  // default page size when you genuinely want all rows back.
-  const matchIds = matchRows.map((m) => m.id);
-  const { data: seatRows, error } = await supabase
-    .from("booking_seats")
-    .select("match_id, seat_id")
-    .in("match_id", matchIds.length ? matchIds : ["__none__"])
+  // Query the smaller bookings table (~one row per booking ≈ a few hundred
+  // total even with an 80%-full stadium) and aggregate seat counts in JS.
+  // booking_seats is the unique-per-seat constraint table, so its rowcount
+  // can blow past Supabase's default 1000-row page when the stadium is busy.
+  const { data: bookings, error } = await supabase
+    .from("bookings")
+    .select("match_id, seats")
+    .neq("status", "cancelled")
     .range(0, 99999);
   if (error) throw new Error(error.message);
 
   const bookedByMatch = new Map<string, string[]>();
-  for (const row of seatRows ?? []) {
-    const list = bookedByMatch.get(row.match_id) ?? [];
-    list.push(row.seat_id);
-    bookedByMatch.set(row.match_id, list);
+  for (const b of bookings ?? []) {
+    const list = bookedByMatch.get(b.match_id) ?? [];
+    for (const seat of b.seats ?? []) list.push(seat);
+    bookedByMatch.set(b.match_id, list);
   }
 
   return matchRows.map((r) =>
