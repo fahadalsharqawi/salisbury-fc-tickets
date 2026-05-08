@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney, type Currency } from "@/lib/format";
@@ -99,11 +100,11 @@ export default async function TicketsPage({
             {t("tickets.empty", locale)}
           </div>
         ) : (
-          <ul className="stagger space-y-3">
+          <MotionStagger as="ul" className="space-y-3" stagger={0.05}>
             {filtered.map((m) => (
               <FixtureRow key={m.id} match={m} currency={currency} locale={locale} />
             ))}
-          </ul>
+          </MotionStagger>
         )}
       </div>
     </>
@@ -120,7 +121,12 @@ function FixtureRow({
   locale: Locale;
 }) {
   return (
-    <li className="anim-fade-up lift rounded-2xl border border-sfc-n-200 bg-white p-5">
+    <MotionItem
+      as="li"
+      whileHover={{ y: -2, boxShadow: "0 12px 32px -16px rgba(12,22,54,0.22)" }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className="rounded-2xl border border-sfc-n-200 bg-white p-5"
+    >
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         <div className="min-w-[16rem] flex-1">
           <div className="sfc-eyebrow flex items-center gap-2">
@@ -189,7 +195,7 @@ function FixtureRow({
           )}
         </div>
       </div>
-    </li>
+    </MotionItem>
   );
 }
 
