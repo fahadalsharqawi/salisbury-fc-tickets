@@ -1,4 +1,5 @@
 import Link from "next/link";
+import StickyStack from "@/components/StickyStack";
 
 export const metadata = {
   title: "Hospitality — Salisbury FC",
@@ -59,38 +60,23 @@ export default function HospitalityPage() {
       </div>
 
       <div className="sfc-container py-10">
-        <section className="grid gap-5 sm:grid-cols-2">
+        {/* Mobile: simple grid stack so sticky doesn't fight the small screen */}
+        <section className="grid gap-5 sm:hidden">
           {PACKAGES.map((p) => (
-            <article
-              key={p.title}
-              className="anim-fade-up flex flex-col rounded-2xl border border-sfc-n-200 bg-white p-6"
-            >
-              <h2 className="sfc-display text-xl font-bold">{p.title}</h2>
-              <p className="mt-1 text-sm text-sfc-n-600">{p.tagline}</p>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="sfc-display text-4xl font-bold text-sfc-navy">
-                  {p.price}
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-sfc-n-500">
-                  {p.priceNote}
-                </span>
-              </div>
-              <ul className="mt-5 space-y-2 text-sm text-sfc-n-700">
-                {p.perks.map((perk) => (
-                  <li key={perk} className="flex gap-2">
-                    <span aria-hidden className="text-sfc-pitch">✓</span>
-                    <span>{perk}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="mailto:hospitality@salisburyfc.co.uk?subject=Hospitality%20enquiry"
-                className="sfc-btn sfc-btn--primary press mt-6 self-start"
-              >
-                {p.cta}
-              </a>
-            </article>
+            <PackageCard key={p.title} pkg={p} />
           ))}
+        </section>
+
+        {/* Tablet+: sticky stacking — cards stack on top of each other as the
+            user scrolls past, Webflow-style. */}
+        <section className="hidden sm:block">
+          <StickyStack offset={88} step={18}>
+            {PACKAGES.map((p) => (
+              <div key={p.title} className="pb-6">
+                <PackageCard pkg={p} />
+              </div>
+            ))}
+          </StickyStack>
         </section>
 
         <section className="anim-fade-up mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-sfc-navy to-sfc-navy-deep p-6 text-white sm:p-8">
@@ -148,5 +134,38 @@ export default function HospitalityPage() {
         </div>
       </div>
     </>
+  );
+}
+
+type Pkg = (typeof PACKAGES)[number];
+
+function PackageCard({ pkg }: { pkg: Pkg }) {
+  return (
+    <article className="flex flex-col rounded-2xl border border-sfc-n-200 bg-white p-6 shadow-[0_8px_24px_-12px_rgba(12,22,54,0.18)]">
+      <h2 className="sfc-display text-xl font-bold">{pkg.title}</h2>
+      <p className="mt-1 text-sm text-sfc-n-600">{pkg.tagline}</p>
+      <div className="mt-4 flex items-baseline gap-2">
+        <span className="sfc-display text-4xl font-bold text-sfc-navy">
+          {pkg.price}
+        </span>
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-sfc-n-500">
+          {pkg.priceNote}
+        </span>
+      </div>
+      <ul className="mt-5 space-y-2 text-sm text-sfc-n-700">
+        {pkg.perks.map((perk) => (
+          <li key={perk} className="flex gap-2">
+            <span aria-hidden className="text-sfc-pitch">✓</span>
+            <span>{perk}</span>
+          </li>
+        ))}
+      </ul>
+      <a
+        href="mailto:hospitality@salisburyfc.co.uk?subject=Hospitality%20enquiry"
+        className="sfc-btn sfc-btn--primary press mt-6 self-start"
+      >
+        {pkg.cta}
+      </a>
+    </article>
   );
 }

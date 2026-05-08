@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import HeroParallax from "@/components/HeroParallax";
+import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
 import { LAST_RESULT, LEAGUE, NEWS, RESULTS, STANDINGS } from "@/lib/club";
 import { getCurrency } from "@/lib/currency-server";
@@ -236,7 +237,10 @@ export default async function Home() {
       {/* SEASON STATS — slim band */}
       <section className="bg-sfc-bone">
         <div className="sfc-container py-12">
-          <div className="grid gap-0 overflow-hidden rounded-2xl border border-sfc-n-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+          <MotionStagger
+            className="grid gap-0 overflow-hidden rounded-2xl border border-sfc-n-200 bg-white sm:grid-cols-2 lg:grid-cols-4"
+            stagger={0.08}
+          >
             <Stat label={t("stats.league", locale)} value={localize(LEAGUE.league, locale)} small />
             <Stat
               label={t("stats.position", locale)}
@@ -248,7 +252,7 @@ export default async function Home() {
               value={`${LEAGUE.won}W ${LEAGUE.drawn}D ${LEAGUE.lost}L`}
               small
             />
-          </div>
+          </MotionStagger>
         </div>
       </section>
 
@@ -271,11 +275,14 @@ export default async function Home() {
               {t("common.see-all", locale)}
             </Link>
           </div>
-          <ul className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <MotionStagger as="ul" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
             {matches.slice(0, 6).map((m) => (
-              <li
+              <MotionItem
+                as="li"
                 key={m.id}
-                className="anim-fade-up lift overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
+                whileHover={{ y: -3, boxShadow: "0 16px 36px -18px rgba(12,22,54,0.28)" }}
+                transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
               >
                 <FixtureCrests
                   opponent={m.opponent}
@@ -319,9 +326,9 @@ export default async function Home() {
                     </Link>
                   </div>
                 </div>
-              </li>
+              </MotionItem>
             ))}
-          </ul>
+          </MotionStagger>
         </div>
       </section>
 
@@ -489,14 +496,14 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="grid gap-7 lg:grid-cols-[1.6fr_1fr]">
+          <MotionStagger className="grid gap-7 lg:grid-cols-[1.6fr_1fr]" stagger={0.1}>
             {NEWS[0] && <FeatureCard article={NEWS[0]} locale={locale} />}
-            <div className="flex flex-col">
+            <MotionStagger className="flex flex-col" stagger={0.06}>
               {NEWS.slice(1, 4).map((n) => (
                 <SmallRow key={n.slug} article={n} locale={locale} />
               ))}
-            </div>
-          </div>
+            </MotionStagger>
+          </MotionStagger>
         </div>
       </section>
     </div>
@@ -524,8 +531,8 @@ function Stat({
   small?: boolean;
 }) {
   return (
-    <div
-      className={`anim-fade-up px-6 py-6 sm:border-l sm:border-sfc-n-200 sm:first:border-l-0 ${
+    <MotionItem
+      className={`px-6 py-6 sm:border-l sm:border-sfc-n-200 sm:first:border-l-0 ${
         accent ? "bg-sfc-bone" : ""
       }`}
     >
@@ -539,7 +546,7 @@ function Stat({
       >
         {value}
       </div>
-    </div>
+    </MotionItem>
   );
 }
 
@@ -632,33 +639,39 @@ type Article = (typeof import("@/lib/club"))["NEWS"][number];
 
 function FeatureCard({ article, locale }: { article: Article; locale: Locale }) {
   return (
-    <Link
-      href={`/news/${article.slug}`}
-      className="group anim-fade-up flex flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(12,22,54,0.14)]"
+    <MotionItem
+      whileHover={{ y: -3, boxShadow: "0 16px 36px -16px rgba(12,22,54,0.22)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 26 }}
+      className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
     >
-      <div className="relative aspect-[16/9] overflow-hidden">
-        <NewsPoster article={article} locale={locale} size="feature" />
-      </div>
-      <div className="px-7 py-7 sm:px-8 sm:pb-8 sm:pt-7">
-        <span className="inline-block rounded-full bg-sfc-n-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sfc-navy">
-          {localize(article.category, locale)}
-        </span>
-        <h3 className="sfc-display mt-3 text-balance text-[clamp(1.5rem,2.4vw,2.25rem)] leading-[1.05] tracking-[-0.01em] text-sfc-ink transition group-hover:text-sfc-navy">
-          {article.title[locale]}
-        </h3>
-        <p className="mt-3 max-w-[56ch] text-base leading-[1.55] text-sfc-n-600">
-          {article.summary[locale]}
-        </p>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-sfc-n-400">
-            {formatNewsDate(article.date, locale)}
-          </span>
-          <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-sfc-navy">
-            {t("common.read-more", locale)}
-          </span>
+      <Link
+        href={`/news/${article.slug}`}
+        className="group flex flex-col"
+      >
+        <div className="relative aspect-[16/9] overflow-hidden">
+          <NewsPoster article={article} locale={locale} size="feature" />
         </div>
-      </div>
-    </Link>
+        <div className="px-7 py-7 sm:px-8 sm:pb-8 sm:pt-7">
+          <span className="inline-block rounded-full bg-sfc-n-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sfc-navy">
+            {localize(article.category, locale)}
+          </span>
+          <h3 className="sfc-display mt-3 text-balance text-[clamp(1.5rem,2.4vw,2.25rem)] leading-[1.05] tracking-[-0.01em] text-sfc-ink transition group-hover:text-sfc-navy">
+            {article.title[locale]}
+          </h3>
+          <p className="mt-3 max-w-[56ch] text-base leading-[1.55] text-sfc-n-600">
+            {article.summary[locale]}
+          </p>
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-sfc-n-400">
+              {formatNewsDate(article.date, locale)}
+            </span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-sfc-navy">
+              {t("common.read-more", locale)}
+            </span>
+          </div>
+        </div>
+      </Link>
+    </MotionItem>
   );
 }
 
@@ -670,22 +683,28 @@ function SmallRow({
   locale: Locale;
 }) {
   return (
-    <Link
-      href={`/news/${article.slug}`}
-      className="anim-fade-up grid grid-cols-[96px_1fr] items-stretch gap-4 border-b border-sfc-n-200 py-5 transition first:pt-0 last:border-b-0 hover:bg-white"
+    <MotionItem
+      whileHover={{ x: 4 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="border-b border-sfc-n-200 last:border-b-0"
     >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-md">
-        <NewsPoster article={article} locale={locale} size="thumb" showTitle={false} />
-      </div>
-      <div className="flex min-w-0 flex-col gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sfc-n-400">
-          {localize(article.category, locale)} · {formatNewsDate(article.date, locale)}
-        </span>
-        <span className="sfc-display text-[15px] font-bold leading-[1.2] tracking-[-0.005em] text-sfc-ink">
-          {article.title[locale]}
-        </span>
-      </div>
-    </Link>
+      <Link
+        href={`/news/${article.slug}`}
+        className="grid grid-cols-[96px_1fr] items-stretch gap-4 py-5 first:pt-0 hover:bg-white"
+      >
+        <div className="relative aspect-[4/3] overflow-hidden rounded-md">
+          <NewsPoster article={article} locale={locale} size="thumb" showTitle={false} />
+        </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sfc-n-400">
+            {localize(article.category, locale)} · {formatNewsDate(article.date, locale)}
+          </span>
+          <span className="sfc-display text-[15px] font-bold leading-[1.2] tracking-[-0.005em] text-sfc-ink">
+            {article.title[locale]}
+          </span>
+        </div>
+      </Link>
+    </MotionItem>
   );
 }
 
