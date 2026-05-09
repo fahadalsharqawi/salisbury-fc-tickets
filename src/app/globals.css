@@ -129,19 +129,78 @@ body {
     transform var(--dur-fast) var(--ease-standard);
 }
 .sfc-btn:active { transform: translateY(1px); }
+
+/* Brand gradients — reused across CTAs, page bands, and accent surfaces. */
+:root {
+  --grad-brand:
+    linear-gradient(
+      135deg,
+      var(--color-sfc-navy) 0%,
+      var(--color-sfc-navy-deep) 55%,
+      var(--color-sfc-navy-darker) 100%
+    );
+  --grad-brand-hover:
+    linear-gradient(
+      135deg,
+      var(--color-sfc-navy-deep) 0%,
+      var(--color-sfc-navy-darker) 100%
+    );
+  --grad-accent:
+    linear-gradient(
+      135deg,
+      var(--color-sfc-navy) 0%,
+      var(--color-sfc-sky) 100%
+    );
+  --grad-band:
+    linear-gradient(
+      135deg,
+      var(--color-sfc-navy) 0%,
+      var(--color-sfc-navy-deep) 50%,
+      var(--color-sfc-navy-darker) 100%
+    );
+}
+
 .sfc-btn--primary {
-  background: var(--color-sfc-navy);
+  background: var(--grad-brand);
   color: #fff;
   box-shadow: 0 4px 12px -4px rgba(31,74,107,0.45);
 }
-.sfc-btn--primary:hover { background: var(--color-sfc-navy-deep); color: #fff; box-shadow: 0 6px 18px -4px rgba(31,74,107,0.55); }
+.sfc-btn--primary:hover {
+  background: var(--grad-brand-hover);
+  color: #fff;
+  box-shadow: 0 8px 22px -6px rgba(31,74,107,0.6);
+}
 /* Kept as a class name for back-compat; styled like primary navy now (no red). */
 .sfc-btn--live {
-  background: var(--color-sfc-navy);
+  background: var(--grad-brand);
   color: #fff;
   box-shadow: 0 4px 12px -4px rgba(31,74,107,0.45);
 }
-.sfc-btn--live:hover { background: var(--color-sfc-navy-deep); color: #fff; box-shadow: 0 6px 18px -4px rgba(31,74,107,0.55); }
+.sfc-btn--live:hover {
+  background: var(--grad-brand-hover);
+  color: #fff;
+  box-shadow: 0 8px 22px -6px rgba(31,74,107,0.6);
+}
+
+/* Page band — replaces solid navy on /tickets, /club, /news, /contact … */
+.sfc-band {
+  background: var(--grad-band);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.sfc-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 80% 20%,
+    rgba(184, 212, 232, 0.18),
+    transparent 60%
+  );
+}
+.sfc-band > * { position: relative; z-index: 1; }
 .sfc-btn--ghost {
   background: transparent;
   color: var(--color-sfc-navy);

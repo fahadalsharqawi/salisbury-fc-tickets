@@ -26,7 +26,7 @@ export default async function ContactPage({
   return (
     <>
       {/* Page strip */}
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-8">
           <div className="sfc-eyebrow sfc-eyebrow--on-dark">
             {t("contact.eyebrow", locale)}

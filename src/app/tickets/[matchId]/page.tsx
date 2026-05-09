@@ -44,7 +44,7 @@ export default async function BookingFormPage({
   return (
     <>
       {/* Page strip — compact on mobile so the seat map gets more vertical room */}
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-4 sm:py-6">
           <Link
             href="/tickets"

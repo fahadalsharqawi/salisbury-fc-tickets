@@ -41,7 +41,7 @@ export default async function StaffPage({ params }: { params: Promise<Params> })
 
   return (
     <>
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-4 sm:py-6">
           <Link
             href="/club"

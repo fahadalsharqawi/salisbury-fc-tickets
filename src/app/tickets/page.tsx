@@ -47,7 +47,7 @@ export default async function TicketsPage({
   return (
     <>
       {/* Page strip */}
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-6">
           <div className="sfc-eyebrow sfc-eyebrow--on-dark">{t("nav.fixtures", locale)}</div>
           <h1 className="sfc-display mt-1 text-3xl font-bold sm:text-4xl">
