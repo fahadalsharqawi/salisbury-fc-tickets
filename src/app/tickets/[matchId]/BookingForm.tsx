@@ -597,7 +597,7 @@ function SeatBtn({
           : { type: "spring", stiffness: 600, damping: 26 }
       }
       className={[
-        "block",
+        "flex items-center justify-center",
         facingClass,
         "border text-[7px] sm:text-[9px] font-semibold leading-none",
         booked
@@ -612,13 +612,21 @@ function SeatBtn({
     >
       <span className="sr-only">{id}</span>
       {booked ? (
-        <span
+        // SVG × scales cleanly with the seat tile and never overflows the
+        // border the way the text "×" character did at small sizes.
+        <svg
           aria-hidden
-          className="block leading-none text-sfc-n-500"
-          style={{ fontSize: SEAT_PX * 0.85 }}
+          viewBox="0 0 10 10"
+          className="text-sfc-n-500"
+          style={{ width: SEAT_PX * 0.5, height: SEAT_PX * 0.5 }}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
         >
-          ×
-        </span>
+          <path d="M2.5 2.5 L7.5 7.5" />
+          <path d="M7.5 2.5 L2.5 7.5" />
+        </svg>
       ) : (
         <span aria-hidden className="hidden sm:inline">
           {label}
