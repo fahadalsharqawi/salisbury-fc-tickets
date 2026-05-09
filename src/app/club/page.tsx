@@ -86,12 +86,20 @@ export default async function ClubPage() {
           </div>
           <div>
             <Label>{t("club.home-ground", locale)}</Label>
-            <div className="sfc-display mt-1 text-base font-bold">
-              {localize(STADIUM.name, locale)}
-            </div>
-            <div className="mt-1 text-xs text-sfc-n-500">
-              {localize(STADIUM.address, locale)}
-            </div>
+            <Link
+              href="/club/ray-mac-stadium"
+              className="group block"
+            >
+              <div className="sfc-display mt-1 text-base font-bold transition group-hover:text-sfc-navy">
+                {localize(STADIUM.name, locale)}
+              </div>
+              <div className="mt-1 text-xs text-sfc-n-500">
+                {localize(STADIUM.address, locale)}
+              </div>
+              <div className="sfc-display mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-sfc-navy opacity-0 transition group-hover:opacity-100">
+                {t("nav.ray-mac", locale)} →
+              </div>
+            </Link>
           </div>
         </section>
 
