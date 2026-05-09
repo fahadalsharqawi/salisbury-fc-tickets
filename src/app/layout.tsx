@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
 import CursorDotTrail from "@/components/anim/CursorDotTrail";
+import BrandLink from "@/components/BrandLink";
 import MobileNav from "@/components/MobileNav";
 import ScrollProgress from "@/components/ScrollProgress";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -112,7 +113,7 @@ export default async function RootLayout({
         <ScrollReveal />
         <header className="sticky top-0 z-50 border-b border-sfc-n-200/70 bg-white/85 backdrop-blur-md">
           <div className="sfc-container flex h-16 items-center gap-3 sm:h-[72px]">
-            <Link href="/" className="flex items-center gap-3">
+            <BrandLink ariaLabel={t("brand.name", locale)} className="flex items-center gap-3">
               <Image
                 src="/logo.png"
                 alt={t("nav.crest-alt", locale)}
@@ -129,7 +130,7 @@ export default async function RootLayout({
                   {t("brand.tagline", locale)}
                 </span>
               </span>
-            </Link>
+            </BrandLink>
 
             <nav className="hidden items-center gap-1 lg:flex lg:ms-6">
               <NavLink href="/tickets">{t("nav.fixtures", locale)}</NavLink>
