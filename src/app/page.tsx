@@ -1,6 +1,11 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AnimatedGradient from "@/components/anim/AnimatedGradient";
+import GlassyButton from "@/components/anim/GlassyButton";
+import NumberCounter from "@/components/anim/NumberCounter";
+import TextScroll from "@/components/anim/TextScroll";
+import TiltCard from "@/components/anim/TiltCard";
 import HeroParallax from "@/components/HeroParallax";
 import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
@@ -29,13 +34,7 @@ export default async function Home() {
         style={{ minHeight: 520 }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-sfc-navy-deep via-sfc-navy to-sfc-navy-darker" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse at 80% 20%, rgba(104,152,200,0.25), transparent 60%)",
-          }}
-        />
+        <AnimatedGradient className="absolute inset-0" intensity={0.9} />
         <HeroParallax className="absolute inset-0 opacity-[0.05]" />
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-sfc-navy-darker via-sfc-navy-darker/40 to-transparent" />
 
@@ -77,13 +76,10 @@ export default async function Home() {
                   {t("hero.browse-fixtures", locale)}
                 </Link>
                 {next && (
-                  <Link
-                    href={`/tickets/${next.id}`}
-                    className="sfc-btn sfc-btn--ghost-on-dark press"
-                  >
+                  <GlassyButton href={`/tickets/${next.id}`}>
                     {t("hero.next-match-prefix", locale)}{" "}
                     {localize(next.opponent, locale)}
-                  </Link>
+                  </GlassyButton>
                 )}
               </div>
             </div>
@@ -246,9 +242,18 @@ export default async function Home() {
             <Stat label={t("stats.league", locale)} value={localize(LEAGUE.league, locale)} small />
             <Stat
               label={t("stats.position", locale)}
-              value={`${LEAGUE.position}${t("club.position-suffix", locale)}`}
+              value={
+                <>
+                  <NumberCounter to={LEAGUE.position} />
+                  {t("club.position-suffix", locale)}
+                </>
+              }
             />
-            <Stat label={t("stats.points", locale)} value={LEAGUE.points.toString()} accent />
+            <Stat
+              label={t("stats.points", locale)}
+              value={<NumberCounter to={LEAGUE.points} />}
+              accent
+            />
             <Stat
               label={t("stats.form", locale)}
               value={`${LEAGUE.won}W ${LEAGUE.drawn}D ${LEAGUE.lost}L`}
@@ -266,9 +271,10 @@ export default async function Home() {
               <span className="sfc-eyebrow">
                 {t("nav.fixtures", locale)}
               </span>
-              <h2 className="sfc-display mt-2 text-[clamp(2rem,3.4vw,2.75rem)] leading-none tracking-[-0.015em]">
-                {t("section.upcoming-fixtures", locale)}
-              </h2>
+              <TextScroll
+                text={t("section.upcoming-fixtures", locale)}
+                className="sfc-display mt-2 text-[clamp(2rem,3.4vw,2.75rem)] leading-none tracking-[-0.015em]"
+              />
             </div>
             <Link
               href="/tickets"
@@ -279,13 +285,11 @@ export default async function Home() {
           </div>
           <MotionStagger as="ul" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
             {matches.slice(0, 6).map((m) => (
-              <MotionItem
-                as="li"
-                key={m.id}
-                whileHover={{ y: -3, boxShadow: "0 16px 36px -18px rgba(12,22,54,0.28)" }}
-                transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white"
-              >
+              <MotionItem as="li" key={m.id}>
+                <TiltCard
+                  intensity={6}
+                  className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white shadow-sm transition-shadow hover:shadow-[0_16px_36px_-18px_rgba(12,22,54,0.28)]"
+                >
                 <FixtureCrests
                   opponent={m.opponent}
                   isHome={m.isHome}
@@ -328,6 +332,7 @@ export default async function Home() {
                     </Link>
                   </div>
                 </div>
+                </TiltCard>
               </MotionItem>
             ))}
           </MotionStagger>
@@ -486,9 +491,10 @@ export default async function Home() {
           <div className="mb-7 flex items-end justify-between gap-6">
             <div>
               <span className="sfc-eyebrow">{t("nav.news", locale)}</span>
-              <h2 className="sfc-display mt-2 text-[clamp(2rem,3.4vw,2.75rem)] leading-none tracking-[-0.015em]">
-                {t("section.latest-from-club", locale)}
-              </h2>
+              <TextScroll
+                text={t("section.latest-from-club", locale)}
+                className="sfc-display mt-2 text-[clamp(2rem,3.4vw,2.75rem)] leading-none tracking-[-0.015em]"
+              />
             </div>
             <Link
               href="/news"
@@ -528,7 +534,7 @@ function Stat({
   small,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   accent?: boolean;
   small?: boolean;
 }) {
