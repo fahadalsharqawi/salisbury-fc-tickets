@@ -38,31 +38,43 @@ export type BlockConfig = {
 // Stand seat. Real Salisbury FC tariff.
 export const MAIN_STAND_SURCHARGE = 1;
 
+// Block sizes are tuned so the bowl renders at a realistic stadium ratio:
+// the pitch ends up around 1.55:1 (close to a real FA-regulation pitch),
+// and north + south sides are the same total length, as are east + west.
+//
+//                   North length (sum)  ≈ 26 cols
+//                  ┌────────────────────────────────┐
+//                  │ NE | X | Y | SE                │
+//   West length    │           PITCH (~26 × 17)     │   East length
+//   ≈ 17 cols      │                                │   ≈ 17 cols
+//                  │ NW | A B C D E F G H | SW      │
+//                  └────────────────────────────────┘
+//                   South length (sum)  ≈ 26 cols
 export const BLOCKS: readonly BlockConfig[] = [
-  // ── North side (top of the diagram): NE | X | Y | SE ──
-  { id: "NE",  name: "NE Terrace",     short: "NE", side: "north", order: 0, depth: 4, length: 8, isSeated: false },
+  // ── North side: NE | X | Y | SE  (sum length = 26) ──
+  { id: "NE",  name: "NE Terrace",     short: "NE", side: "north", order: 0, depth: 4, length: 7, isSeated: false },
   { id: "X",   name: "Block X",        short: "X",  side: "north", order: 1, depth: 4, length: 6, isSeated: false },
   { id: "Y",   name: "Block Y",        short: "Y",  side: "north", order: 2, depth: 4, length: 6, isSeated: false },
-  { id: "SE",  name: "SE Terrace",     short: "SE", side: "north", order: 3, depth: 4, length: 8, isSeated: false },
+  { id: "SE",  name: "SE Terrace",     short: "SE", side: "north", order: 3, depth: 4, length: 7, isSeated: false },
 
-  // ── East side (right): Partridge Way Terraces 2 (top) and 1 (bottom) ──
-  { id: "P2",  name: "Partridge Way Terrace 2", short: "P2", side: "east",  order: 0, depth: 4, length: 12, isSeated: false },
-  { id: "P1",  name: "Partridge Way Terrace 1", short: "P1", side: "east",  order: 1, depth: 4, length: 12, isSeated: false },
+  // ── East side: Partridge Way Terraces 2 (top) + 1 (bottom)  (sum length = 16) ──
+  { id: "P2",  name: "Partridge Way Terrace 2", short: "P2", side: "east",  order: 0, depth: 4, length: 8, isSeated: false },
+  { id: "P1",  name: "Partridge Way Terrace 1", short: "P1", side: "east",  order: 1, depth: 4, length: 8, isSeated: false },
 
-  // ── West side (left): one full-length North Stand Terrace ──
-  { id: "NS",  name: "North Stand Terrace",    short: "NS", side: "west",  order: 0, depth: 5, length: 26, isSeated: false },
+  // ── West side: full-length North Stand Terrace  (length = 17) ──
+  { id: "NS",  name: "North Stand Terrace",    short: "NS", side: "west",  order: 0, depth: 5, length: 17, isSeated: false },
 
-  // ── South side (bottom — the all-seater Main Stand): NW A B C D E F G H SW ──
-  { id: "NW",  name: "NW Terrace",     short: "NW", side: "south", order: 0, depth: 4, length: 5, isSeated: false },
-  { id: "A",   name: "Block A",        short: "A",  side: "south", order: 1, depth: 6, length: 4, isSeated: true  },
-  { id: "B",   name: "Block B",        short: "B",  side: "south", order: 2, depth: 6, length: 4, isSeated: true  },
-  { id: "C",   name: "Block C",        short: "C",  side: "south", order: 3, depth: 6, length: 4, isSeated: true  },
-  { id: "D",   name: "Block D",        short: "D",  side: "south", order: 4, depth: 8, length: 4, isSeated: true  },
-  { id: "E",   name: "Block E",        short: "E",  side: "south", order: 5, depth: 8, length: 3, isSeated: true  },
-  { id: "F",   name: "Block F",        short: "F",  side: "south", order: 6, depth: 8, length: 3, isSeated: true  },
-  { id: "G",   name: "Block G",        short: "G",  side: "south", order: 7, depth: 6, length: 4, isSeated: true  },
-  { id: "H",   name: "Block H",        short: "H",  side: "south", order: 8, depth: 6, length: 4, isSeated: true  },
-  { id: "SW",  name: "SW Terrace",     short: "SW", side: "south", order: 9, depth: 4, length: 5, isSeated: false },
+  // ── South side (Main Stand): NW | A B C D E F G H | SW  (sum length = 26) ──
+  { id: "NW",  name: "NW Terrace",     short: "NW", side: "south", order: 0, depth: 4, length: 3, isSeated: false },
+  { id: "A",   name: "Block A",        short: "A",  side: "south", order: 1, depth: 6, length: 2, isSeated: true  },
+  { id: "B",   name: "Block B",        short: "B",  side: "south", order: 2, depth: 6, length: 2, isSeated: true  },
+  { id: "C",   name: "Block C",        short: "C",  side: "south", order: 3, depth: 6, length: 3, isSeated: true  },
+  { id: "D",   name: "Block D",        short: "D",  side: "south", order: 4, depth: 8, length: 3, isSeated: true  },
+  { id: "E",   name: "Block E",        short: "E",  side: "south", order: 5, depth: 8, length: 2, isSeated: true  },
+  { id: "F",   name: "Block F",        short: "F",  side: "south", order: 6, depth: 8, length: 2, isSeated: true  },
+  { id: "G",   name: "Block G",        short: "G",  side: "south", order: 7, depth: 6, length: 3, isSeated: true  },
+  { id: "H",   name: "Block H",        short: "H",  side: "south", order: 8, depth: 6, length: 3, isSeated: true  },
+  { id: "SW",  name: "SW Terrace",     short: "SW", side: "south", order: 9, depth: 4, length: 3, isSeated: false },
 ];
 
 const BLOCK_BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
