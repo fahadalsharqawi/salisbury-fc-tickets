@@ -88,7 +88,7 @@ export default function MobileNav({
 
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-[60] lg:hidden">
+          <div className="fixed inset-0 z-[60] h-dvh lg:hidden">
             <motion.div
               onClick={() => setOpen(false)}
               initial={{ opacity: 0 }}
@@ -105,7 +105,7 @@ export default function MobileNav({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="absolute end-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl rtl:end-auto rtl:start-0"
+              className="absolute end-0 top-0 flex h-dvh w-full flex-col bg-white shadow-2xl rtl:end-auto rtl:start-0"
             >
               {/* Header — close (X), crest, and Sign in / Sign out pill */}
               <div className="flex items-center gap-3 border-b border-sfc-n-100 px-4 py-3">
@@ -161,7 +161,7 @@ export default function MobileNav({
               </div>
 
               {/* Scrollable body */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto">
                 {/* Primary nav — large bold list */}
                 <nav className="flex flex-col">
                   {PRIMARY.map((n) => (
