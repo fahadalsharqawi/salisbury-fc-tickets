@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reseedDemoBookingsAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency-server";
 import { getStats, listBookings, listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
@@ -8,7 +9,14 @@ import type { BookingStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboardPage() {
+type SearchParams = Promise<{ reseeded?: string; error?: string }>;
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const sp = await searchParams;
   const currency = await getCurrency();
   const locale = await getLocale();
   const stats = await getStats();
@@ -17,6 +25,17 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {sp.reseeded && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-800">
+          Demo bookings reseeded — every match is now ~50% sold.
+        </div>
+      )}
+      {sp.error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">
+          {sp.error}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label={t("admin.stat.tickets-sold", locale)} value={stats.ticketsSold.toString()} />
         <Stat label={t("admin.stat.active-bookings", locale)} value={stats.activeBookings.toString()} />
@@ -30,6 +49,27 @@ export default async function AdminDashboardPage() {
         />
         <Stat label={t("admin.stat.revenue", locale)} value={formatMoney(stats.revenue, currency)} accent />
       </div>
+
+      {/* Demo data tools — wipes existing bookings and re-creates ~50%
+          random demo bookings per match using the new Ray Mac block IDs. */}
+      <section className="rounded-2xl border border-stone-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Demo bookings</h2>
+            <p className="text-sm text-stone-500">
+              Reset every match to ~50% sold with seats spread randomly across the bowl.
+            </p>
+          </div>
+          <form action={reseedDemoBookingsAction}>
+            <button
+              type="submit"
+              className="sfc-btn sfc-btn--primary press"
+            >
+              Reseed demo bookings
+            </button>
+          </form>
+        </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-stone-200 bg-white">

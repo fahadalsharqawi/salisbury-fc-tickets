@@ -17,12 +17,12 @@ BEGIN
     DECLARE
       -- (block_id, depth, length) — must match BLOCKS in src/lib/seats.ts.
       blocks text[][] := ARRAY[
-        ['NE','6','5'], ['X','6','4'], ['Y','6','4'], ['SE','6','5'],
-        ['P2','8','6'], ['P1','8','6'],
-        ['NS','12','12'],
-        ['NW','6','2'], ['A','9','2'], ['B','9','2'], ['C','9','2'],
-        ['D','11','2'], ['E','11','1'], ['F','11','1'],
-        ['G','9','2'], ['H','9','2'], ['SW','6','2']
+        ['NE','6','6'], ['X','6','3'], ['Y','6','3'], ['SE','6','6'],
+        ['P2','6','6'], ['P1','6','6'],
+        ['NS','8','12'],
+        ['NW','6','3'], ['A','9','2'], ['B','9','2'], ['C','9','2'],
+        ['D','9','2'], ['E','9','1'], ['F','9','1'],
+        ['G','9','2'], ['H','9','2'], ['SW','6','3']
       ];
       pool text[] := '{}';
       shuffled text[];
@@ -59,8 +59,8 @@ BEGIN
         END LOOP;
       END LOOP;
 
-      -- Aim for ~80% occupancy across the whole bowl for the demo.
-      target := (array_length(pool, 1) * 0.80)::int;
+      -- Aim for ~50% occupancy for the demo so users can always find seats.
+      target := (array_length(pool, 1) * 0.50)::int;
 
       SELECT ARRAY(SELECT unnest(pool) ORDER BY random()) INTO shuffled;
       WHILE i <= target LOOP

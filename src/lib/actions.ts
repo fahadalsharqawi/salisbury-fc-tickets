@@ -12,6 +12,7 @@ import {
   updateMatch,
 } from "./db";
 import { allSeatIds } from "./seats";
+import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 import type { CancelledBy, PaymentMethod } from "./types";
 import type { Currency } from "./format";
@@ -233,4 +234,108 @@ export async function submitContactAction(formData: FormData): Promise<void> {
   const name = str(formData.get("contactName"));
   if (!name) redirect(`/contact?error=${encodeURIComponent("Please add your name.")}`);
   redirect(`/contact?sent=${encodeURIComponent(name)}`);
+}
+
+// ── Demo data: clear all bookings and reseed every match to ~50% ──────────
+//
+// Used by the /admin "Reseed demo bookings" button. Runs entirely in the
+// Vercel function via the Supabase service-role client, so the demo can
+// be reset without opening the Supabase dashboard.
+const DEMO_NAMES = [
+  "Oliver Smith", "Sarah Jones", "Tom Wilson", "Emma Brown", "James Taylor",
+  "Lucy Davies", "Harry Roberts", "Charlotte White", "Jack Thompson",
+  "Lily Walker", "Charlie Hughes", "Grace Edwards", "George Green", "Mia Hall",
+  "Henry Lewis", "Isla Wood", "Alfie Harris", "Amelia Clark", "Noah Robinson",
+  "Ella Wright", "Ethan Carter", "Evelyn Phillips", "Oscar Bennett",
+  "Poppy Mitchell", "Leo Cooper", "Florence Kelly", "Freddie Hayes",
+  "Ivy Powell", "Theo Reed", "Daisy Ward", "Arthur King", "Rosie Scott",
+  "Joseph Bell", "Phoebe Murphy", "Logan Cox", "Hazel Howard", "William Ross",
+  "Maisie Mason", "Edward Ellis", "Sienna Wells",
+];
+
+const DEMO_PAYMENT_POOL: PaymentMethod[] = [
+  "card", "card", "card", "card", "apple", "google",
+];
+
+function shuffle<T>(arr: T[]): T[] {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+export async function reseedDemoBookingsAction(): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Clear existing demo bookings (and the booking_seats rows they own).
+  await supabase.from("booking_seats").delete().not("seat_id", "is", null);
+  await supabase.from("bookings").delete().not("id", "is", null);
+
+  // List active matches.
+  const { data: matches, error: matchErr } = await supabase
+    .from("matches")
+    .select("id")
+    .is("cancelled_at", null);
+  if (matchErr) {
+    redirect(`/admin?error=${encodeURIComponent(matchErr.message)}`);
+  }
+
+  const allSeats = allSeatIds();
+  const targetFraction = 0.5;
+
+  for (const m of matches ?? []) {
+    const matchId = m.id as string;
+    const shuffled = shuffle(allSeats);
+    const target = Math.floor(allSeats.length * targetFraction);
+
+    let i = 0;
+    while (i < target) {
+      // 70% singleton, 25% pair, 5% triplet — keeps the pattern speckled.
+      const r = Math.random();
+      let groupSize = r < 0.7 ? 1 : r < 0.95 ? 2 : 3;
+      groupSize = Math.min(groupSize, target - i);
+      const seats = shuffled.slice(i, i + groupSize);
+      i += groupSize;
+
+      const name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];
+      const method = DEMO_PAYMENT_POOL[Math.floor(Math.random() * DEMO_PAYMENT_POOL.length)];
+      let adult = groupSize;
+      let conc = 0;
+      let u17 = 0;
+      const u5 = 0;
+      if (groupSize >= 2 && Math.random() < 0.4) { conc = 1; adult -= 1; }
+      if (groupSize >= 3 && Math.random() < 0.3) { u17 = 1; adult -= 1; }
+
+      const { data: booking, error: insErr } = await supabase
+        .from("bookings")
+        .insert({
+          match_id: matchId,
+          customer_name: name,
+          email: name.toLowerCase().replace(/[^a-z]+/g, ".") + "@example.com",
+          phone: "07" + String(Math.floor(Math.random() * 1e9)).padStart(9, "0"),
+          seats,
+          adult_count: adult,
+          concession_count: conc,
+          under17_count: u17,
+          under5_count: u5,
+          payment_method: method,
+          status: "confirmed",
+        })
+        .select("id")
+        .single();
+      if (insErr || !booking) continue;
+
+      const rows = seats.map((seat_id) => ({
+        match_id: matchId,
+        seat_id,
+        booking_id: booking.id,
+      }));
+      await supabase.from("booking_seats").insert(rows);
+    }
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/admin?reseeded=1");
 }
