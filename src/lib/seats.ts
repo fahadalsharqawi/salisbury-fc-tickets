@@ -54,31 +54,34 @@ export const MAIN_STAND_SURCHARGE = 1;
 //                  │ NW | A B C D E F G H | SW      │
 //                  └────────────────────────────────┘
 //                   South length (sum) ≈ 18 cols
+// Block widths roughly match the official Ray Mac diagram: terraces (NE, SE,
+// NW, SW) are visibly wider than the lettered Main Stand blocks, with E and F
+// (the central seated blocks) being the narrowest.
 export const BLOCKS: readonly BlockConfig[] = [
   // ── North side: NE | X | Y | SE  (sum length = 18) ──
-  { id: "NE",  name: "NE Terrace",     short: "NE", side: "north", order: 0, depth: 6, length: 5, isSeated: false },
-  { id: "X",   name: "Block X",        short: "X",  side: "north", order: 1, depth: 6, length: 4, isSeated: false },
-  { id: "Y",   name: "Block Y",        short: "Y",  side: "north", order: 2, depth: 6, length: 4, isSeated: false },
-  { id: "SE",  name: "SE Terrace",     short: "SE", side: "north", order: 3, depth: 6, length: 5, isSeated: false },
+  { id: "NE",  name: "NE Terrace",     short: "NE", side: "north", order: 0, depth: 6, length: 6, isSeated: false },
+  { id: "X",   name: "Block X",        short: "X",  side: "north", order: 1, depth: 6, length: 3, isSeated: false },
+  { id: "Y",   name: "Block Y",        short: "Y",  side: "north", order: 2, depth: 6, length: 3, isSeated: false },
+  { id: "SE",  name: "SE Terrace",     short: "SE", side: "north", order: 3, depth: 6, length: 6, isSeated: false },
 
   // ── East side: Partridge Way Terraces 2 (top) + 1 (bottom)  (sum length = 12) ──
-  { id: "P2",  name: "Partridge Way Terrace 2", short: "P2", side: "east",  order: 0, depth: 8, length: 6, isSeated: false },
-  { id: "P1",  name: "Partridge Way Terrace 1", short: "P1", side: "east",  order: 1, depth: 8, length: 6, isSeated: false },
+  { id: "P2",  name: "Partridge Way Terrace 2", short: "P2", side: "east",  order: 0, depth: 6, length: 6, isSeated: false },
+  { id: "P1",  name: "Partridge Way Terrace 1", short: "P1", side: "east",  order: 1, depth: 6, length: 6, isSeated: false },
 
   // ── West side: full-length North Stand Terrace  (length = 12) ──
-  { id: "NS",  name: "North Stand Terrace",    short: "NS", side: "west",  order: 0, depth: 12, length: 12, isSeated: false },
+  { id: "NS",  name: "North Stand Terrace",    short: "NS", side: "west",  order: 0, depth: 8, length: 12, isSeated: false },
 
-  // ── South side (Main Stand): NW | A B C D E F G H | SW  (sum length = 18) ──
-  { id: "NW",  name: "NW Terrace",     short: "NW", side: "south", order: 0, depth: 6, length: 2, isSeated: false },
+  // ── South side (Main Stand): NW | A B C D E F G H | SW  (sum length = 20) ──
+  { id: "NW",  name: "NW Terrace",     short: "NW", side: "south", order: 0, depth: 6, length: 3, isSeated: false },
   { id: "A",   name: "Block A",        short: "A",  side: "south", order: 1, depth: 9, length: 2, isSeated: true  },
   { id: "B",   name: "Block B",        short: "B",  side: "south", order: 2, depth: 9, length: 2, isSeated: true  },
   { id: "C",   name: "Block C",        short: "C",  side: "south", order: 3, depth: 9, length: 2, isSeated: true  },
-  { id: "D",   name: "Block D",        short: "D",  side: "south", order: 4, depth: 11, length: 2, isSeated: true  },
-  { id: "E",   name: "Block E",        short: "E",  side: "south", order: 5, depth: 11, length: 1, isSeated: true  },
-  { id: "F",   name: "Block F",        short: "F",  side: "south", order: 6, depth: 11, length: 1, isSeated: true  },
+  { id: "D",   name: "Block D",        short: "D",  side: "south", order: 4, depth: 9, length: 2, isSeated: true  },
+  { id: "E",   name: "Block E",        short: "E",  side: "south", order: 5, depth: 9, length: 1, isSeated: true  },
+  { id: "F",   name: "Block F",        short: "F",  side: "south", order: 6, depth: 9, length: 1, isSeated: true  },
   { id: "G",   name: "Block G",        short: "G",  side: "south", order: 7, depth: 9, length: 2, isSeated: true  },
   { id: "H",   name: "Block H",        short: "H",  side: "south", order: 8, depth: 9, length: 2, isSeated: true  },
-  { id: "SW",  name: "SW Terrace",     short: "SW", side: "south", order: 9, depth: 6, length: 2, isSeated: false },
+  { id: "SW",  name: "SW Terrace",     short: "SW", side: "south", order: 9, depth: 6, length: 3, isSeated: false },
 ];
 
 const BLOCK_BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
