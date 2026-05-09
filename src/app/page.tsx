@@ -4,6 +4,7 @@ import Link from "next/link";
 import HeroParallax from "@/components/HeroParallax";
 import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
+import WordsReveal from "@/components/WordsReveal";
 import { LAST_RESULT, LEAGUE, NEWS, RESULTS, STANDINGS } from "@/lib/club";
 import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
@@ -55,12 +56,13 @@ export default async function Home() {
               >
                 {t("hero.tickets-on-sale", locale)}
               </span>
-              <h1
-                className="sfc-display anim-fade-up mt-3 max-w-[18ch] text-balance text-[clamp(2.5rem,6vw,5.25rem)] leading-[0.98] tracking-[-0.02em]"
-                style={{ ["--anim-delay" as string]: "200ms" }}
-              >
-                {t("hero.title", locale)}
-              </h1>
+              <WordsReveal
+                as="h1"
+                text={t("hero.title", locale)}
+                className="sfc-display mt-3 max-w-[18ch] text-balance text-[clamp(2.5rem,6vw,5.25rem)] leading-[0.98] tracking-[-0.02em]"
+                stagger={0.06}
+                delay={0.2}
+              />
               <p
                 className="anim-fade-up mt-5 max-w-xl text-pretty text-base leading-relaxed text-sfc-sky-light sm:text-lg"
                 style={{ ["--anim-delay" as string]: "300ms" }}

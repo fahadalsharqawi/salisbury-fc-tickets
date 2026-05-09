@@ -162,62 +162,92 @@ export default function MobileNav({
 
               {/* Scrollable body */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                {/* Primary nav — large bold list */}
+                {/* Primary nav — large bold list, staggered slide-in on open */}
                 <nav className="flex flex-col">
-                  {PRIMARY.map((n) => (
-                    <Link
+                  {PRIMARY.map((n, i) => (
+                    <motion.div
                       key={n.href}
-                      href={n.href}
-                      onClick={() => setOpen(false)}
-                      className="sfc-display flex items-center justify-between border-b border-sfc-n-100 px-5 py-5 text-[22px] font-bold tracking-[-0.01em] text-sfc-ink transition active:bg-sfc-bone"
+                      initial={reduce ? false : { opacity: 0, x: 28 }}
+                      animate={reduce ? undefined : { opacity: 1, x: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.12 + i * 0.05,
+                        ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+                      }}
                     >
-                      <span>{t(n.key, locale)}</span>
-                      <Chevron />
-                    </Link>
+                      <Link
+                        href={n.href}
+                        onClick={() => setOpen(false)}
+                        className="sfc-display flex items-center justify-between border-b border-sfc-n-100 px-5 py-5 text-[22px] font-bold tracking-[-0.01em] text-sfc-ink transition active:bg-sfc-bone"
+                      >
+                        <span>{t(n.key, locale)}</span>
+                        <Chevron />
+                      </Link>
+                    </motion.div>
                   ))}
                 </nav>
 
-                {/* Promo banner — gradient with CTA */}
-                <Link
-                  href="/tickets"
-                  onClick={() => setOpen(false)}
-                  className="relative mx-5 my-5 block overflow-hidden rounded-2xl"
+                {/* Promo banner — pops in after the primary list lands */}
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, scale: 0.96, y: 12 }}
+                  animate={reduce ? undefined : { opacity: 1, scale: 1, y: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 240,
+                    damping: 22,
+                    delay: 0.12 + PRIMARY.length * 0.05,
+                  }}
+                  className="mx-5 my-5"
                 >
-                  <div
-                    className="relative px-5 py-6 text-white"
-                    style={{ background: "var(--grad-band)" }}
+                  <Link
+                    href="/tickets"
+                    onClick={() => setOpen(false)}
+                    className="relative block overflow-hidden rounded-2xl"
                   >
-                    <span
-                      aria-hidden
-                      className="absolute inset-0 opacity-30"
-                      style={{
-                        backgroundImage:
-                          "radial-gradient(ellipse at 90% 20%, rgba(184,212,232,0.55), transparent 60%)",
-                      }}
-                    />
-                    <div className="relative flex items-center gap-4">
-                      <Image
-                        src="/logo.png"
-                        alt=""
-                        width={56}
-                        height={56}
-                        className="h-14 w-14 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+                    <div
+                      className="relative px-5 py-6 text-white"
+                      style={{ background: "var(--grad-band)" }}
+                    >
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 opacity-30"
+                        style={{
+                          backgroundImage:
+                            "radial-gradient(ellipse at 90% 20%, rgba(184,212,232,0.55), transparent 60%)",
+                        }}
                       />
-                      <div className="min-w-0">
-                        <div className="sfc-display text-[18px] font-bold leading-tight">
-                          {t("hero.pick-a-seat", locale)}
+                      <div className="relative flex items-center gap-4">
+                        <Image
+                          src="/logo.png"
+                          alt=""
+                          width={56}
+                          height={56}
+                          className="h-14 w-14 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+                        />
+                        <div className="min-w-0">
+                          <div className="sfc-display text-[18px] font-bold leading-tight">
+                            {t("hero.pick-a-seat", locale)}
+                          </div>
+                          <div className="mt-0.5 text-[12px] text-sfc-sky-light">
+                            {t("hero.tickets-on-sale", locale)}
+                          </div>
                         </div>
-                        <div className="mt-0.5 text-[12px] text-sfc-sky-light">
-                          {t("hero.tickets-on-sale", locale)}
-                        </div>
+                        <span aria-hidden className="ms-auto text-2xl">→</span>
                       </div>
-                      <span aria-hidden className="ms-auto text-2xl">→</span>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </motion.div>
 
-                {/* Secondary nav — slimmer rows */}
-                <nav className="flex flex-col border-t border-sfc-n-100">
+                {/* Secondary nav — fades in last */}
+                <motion.nav
+                  initial={reduce ? false : { opacity: 0 }}
+                  animate={reduce ? undefined : { opacity: 1 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.18 + PRIMARY.length * 0.05,
+                  }}
+                  className="flex flex-col border-t border-sfc-n-100"
+                >
                   {SECONDARY.map((n) => (
                     <Link
                       key={n.href}
@@ -229,7 +259,7 @@ export default function MobileNav({
                       <Chevron />
                     </Link>
                   ))}
-                </nav>
+                </motion.nav>
               </div>
 
               {/* Bottom strip — locale + currency pills */}
