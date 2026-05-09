@@ -26,6 +26,7 @@ type Props = {
 const PRIMARY = [
   { href: "/tickets", key: "nav.fixtures" },
   { href: "/club", key: "nav.club" },
+  { href: "/club/ray-mac-stadium", key: "nav.ray-mac" },
   { href: "/club/hospitality", key: "nav.hospitality" },
   { href: "/news", key: "nav.news" },
   { href: "/contact", key: "nav.contact" },
