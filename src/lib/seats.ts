@@ -1,29 +1,81 @@
-export type StandId = "W" | "E" | "N" | "S";
+// ─── Ray Mac stadium model ───────────────────────────────────────────────────
+//
+// The bowl is split into named blocks rather than four generic stands. Each
+// block sits on one of four sides (north / south / east / west) and is
+// described by:
+//   - depth   = how many rows of seats away from the pitch
+//   - length  = how many seats along the pitch edge
+//   - isSeated = true for the all-seater Main Stand blocks (south side);
+//                terraces are standing-only (no surcharge).
+//
+// Seat IDs are `BLOCK-ROW-COL` where BLOCK is alphanumeric (e.g. "A", "X",
+// "NE", "P1"), ROW is a single uppercase letter (A, B, C, ...) and COL is a
+// 1-based integer.
 
-export type StandConfig = {
-  id: StandId;
+export type Side = "north" | "south" | "east" | "west";
+
+export type BlockConfig = {
+  /** Short id used in seat IDs and URLs. */
+  id: string;
+  /** Human-readable name for legends and aria-labels. */
   name: string;
-  rows: number; // depth (rows from pitch outward)
-  cols: number; // width along the pitch edge
-  axis: "horizontal" | "vertical"; // matches sideline orientation
+  /** Optional shorter label for cramped UI (e.g. on phones). */
+  short?: string;
+  /** Which side of the pitch the block sits on. */
+  side: Side;
+  /** 0-based position within the side, increasing left→right (N/S) or
+   *  top→bottom (E/W) as you face the diagram. */
+  order: number;
+  /** Rows perpendicular to the pitch (depth from the pitch outward). */
+  depth: number;
+  /** Seats parallel to the pitch (length along the pitch edge). */
+  length: number;
+  /** All-seater Main Stand block (carries the seat surcharge). */
+  isSeated: boolean;
 };
 
-// "Stand transfer" fee charged to upgrade from terrace standing to a seat in
-// the Main Stand. Real Salisbury FC tariff.
+// "Stand transfer" fee charged to upgrade from terrace standing to a Main
+// Stand seat. Real Salisbury FC tariff.
 export const MAIN_STAND_SURCHARGE = 1;
 
-export const STANDS: readonly StandConfig[] = [
-  { id: "W", name: "Main Stand", rows: 8, cols: 20, axis: "vertical" },
-  { id: "E", name: "East Terrace", rows: 5, cols: 20, axis: "vertical" },
-  { id: "N", name: "North End", rows: 4, cols: 14, axis: "horizontal" },
-  { id: "S", name: "South End", rows: 4, cols: 14, axis: "horizontal" },
+export const BLOCKS: readonly BlockConfig[] = [
+  // ── North side (top of the diagram): NE | X | Y | SE ──
+  { id: "NE",  name: "NE Terrace",     short: "NE", side: "north", order: 0, depth: 4, length: 8, isSeated: false },
+  { id: "X",   name: "Block X",        short: "X",  side: "north", order: 1, depth: 4, length: 6, isSeated: false },
+  { id: "Y",   name: "Block Y",        short: "Y",  side: "north", order: 2, depth: 4, length: 6, isSeated: false },
+  { id: "SE",  name: "SE Terrace",     short: "SE", side: "north", order: 3, depth: 4, length: 8, isSeated: false },
+
+  // ── East side (right): Partridge Way Terraces 2 (top) and 1 (bottom) ──
+  { id: "P2",  name: "Partridge Way Terrace 2", short: "P2", side: "east",  order: 0, depth: 4, length: 12, isSeated: false },
+  { id: "P1",  name: "Partridge Way Terrace 1", short: "P1", side: "east",  order: 1, depth: 4, length: 12, isSeated: false },
+
+  // ── West side (left): one full-length North Stand Terrace ──
+  { id: "NS",  name: "North Stand Terrace",    short: "NS", side: "west",  order: 0, depth: 5, length: 26, isSeated: false },
+
+  // ── South side (bottom — the all-seater Main Stand): NW A B C D E F G H SW ──
+  { id: "NW",  name: "NW Terrace",     short: "NW", side: "south", order: 0, depth: 4, length: 5, isSeated: false },
+  { id: "A",   name: "Block A",        short: "A",  side: "south", order: 1, depth: 6, length: 4, isSeated: true  },
+  { id: "B",   name: "Block B",        short: "B",  side: "south", order: 2, depth: 6, length: 4, isSeated: true  },
+  { id: "C",   name: "Block C",        short: "C",  side: "south", order: 3, depth: 6, length: 4, isSeated: true  },
+  { id: "D",   name: "Block D",        short: "D",  side: "south", order: 4, depth: 8, length: 4, isSeated: true  },
+  { id: "E",   name: "Block E",        short: "E",  side: "south", order: 5, depth: 8, length: 3, isSeated: true  },
+  { id: "F",   name: "Block F",        short: "F",  side: "south", order: 6, depth: 8, length: 3, isSeated: true  },
+  { id: "G",   name: "Block G",        short: "G",  side: "south", order: 7, depth: 6, length: 4, isSeated: true  },
+  { id: "H",   name: "Block H",        short: "H",  side: "south", order: 8, depth: 6, length: 4, isSeated: true  },
+  { id: "SW",  name: "SW Terrace",     short: "SW", side: "south", order: 9, depth: 4, length: 5, isSeated: false },
 ];
 
-export function getStand(id: StandId): StandConfig {
-  const stand = STANDS.find((s) => s.id === id);
-  if (!stand) throw new Error(`Unknown stand: ${id}`);
-  return stand;
+const BLOCK_BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
+
+export function getBlock(id: string): BlockConfig | undefined {
+  return BLOCK_BY_ID.get(id);
 }
+
+export function blocksOnSide(side: Side): BlockConfig[] {
+  return BLOCKS.filter((b) => b.side === side).sort((a, b) => a.order - b.order);
+}
+
+// ── Identifier helpers ──────────────────────────────────────────────────────
 
 export function rowLetter(idx: number): string {
   return String.fromCharCode(65 + idx);
@@ -33,76 +85,97 @@ export function rowIndex(letter: string): number {
   return letter.charCodeAt(0) - 65;
 }
 
-export function rowsOf(stand: StandConfig): string[] {
-  return Array.from({ length: stand.rows }, (_, i) => rowLetter(i));
+export function rowsOf(block: BlockConfig): string[] {
+  return Array.from({ length: block.depth }, (_, i) => rowLetter(i));
 }
 
-export function colsOf(stand: StandConfig): number[] {
-  return Array.from({ length: stand.cols }, (_, i) => i + 1);
+export function colsOf(block: BlockConfig): number[] {
+  return Array.from({ length: block.length }, (_, i) => i + 1);
 }
 
-export function seatId(stand: StandId, row: string, col: number): string {
-  return `${stand}-${row}-${col}`;
+export function seatId(blockId: string, row: string, col: number): string {
+  return `${blockId}-${row}-${col}`;
 }
+
+// Block id is alphanumeric uppercase, row is a single letter A-Z, col is 1+.
+const SEAT_ID_RE = /^([A-Z][A-Z0-9]*)-([A-Z])-(\d+)$/;
 
 export function parseSeatId(
   id: string,
-): { stand: StandId; row: string; col: number } | null {
-  const m = /^([WENS])-([A-Z])-(\d+)$/.exec(id);
+): { blockId: string; row: string; col: number } | null {
+  const m = SEAT_ID_RE.exec(id);
   if (!m) return null;
-  const stand = m[1] as StandId;
+  const blockId = m[1];
   const row = m[2];
   const col = Number(m[3]);
-  const config = STANDS.find((s) => s.id === stand);
-  if (!config) return null;
-  if (rowIndex(row) >= config.rows || col < 1 || col > config.cols) return null;
-  return { stand, row, col };
+  const block = BLOCK_BY_ID.get(blockId);
+  if (!block) return null;
+  if (rowIndex(row) >= block.depth || col < 1 || col > block.length) return null;
+  return { blockId, row, col };
 }
 
-export function isMainStand(stand: StandId): boolean {
-  return stand === "W";
+export function isMainStand(blockId: string): boolean {
+  const b = BLOCK_BY_ID.get(blockId);
+  return Boolean(b?.isSeated);
 }
 
 export function allSeatIds(): string[] {
   const out: string[] = [];
-  for (const stand of STANDS) {
-    for (let r = 0; r < stand.rows; r++) {
+  for (const b of BLOCKS) {
+    for (let r = 0; r < b.depth; r++) {
       const row = rowLetter(r);
-      for (let c = 1; c <= stand.cols; c++) {
-        out.push(seatId(stand.id, row, c));
+      for (let c = 1; c <= b.length; c++) {
+        out.push(seatId(b.id, row, c));
       }
     }
   }
   return out;
 }
 
-export const TOTAL_SEATS = STANDS.reduce(
-  (sum, s) => sum + s.rows * s.cols,
+export const TOTAL_SEATS = BLOCKS.reduce(
+  (sum, b) => sum + b.depth * b.length,
   0,
 );
 
 export function seatPrice(id: string, basePrice: number): number {
   const p = parseSeatId(id);
   if (!p) return basePrice;
-  return isMainStand(p.stand) ? basePrice + MAIN_STAND_SURCHARGE : basePrice;
+  return isMainStand(p.blockId) ? basePrice + MAIN_STAND_SURCHARGE : basePrice;
 }
 
-export const SEAT_PX = 24; // base seat unit
+export const SEAT_PX = 22; // base seat unit (px)
 
-// Find a contiguous run of `count` free seats. Scans stands in priority order
-// (Main Stand → East → North → South), front rows first, left to right.
+// ── Adjacency picker ────────────────────────────────────────────────────────
+//
+// Find a contiguous run of `count` free seats. Scans blocks in priority
+// order — Main Stand blocks first (best seats), then north terraces, then
+// the rest — front rows first, left to right.
+const PRIORITY_ORDER = [
+  "D", "E", "F", // central main-stand
+  "C", "G",      // mid main-stand
+  "B", "H",      // outer main-stand
+  "A",           // outermost main-stand seated
+  "NW", "SW",    // main-stand terrace bookends
+  "X", "Y",      // central north terraces
+  "NE", "SE",    // north corners
+  "P1", "P2",    // east terraces
+  "NS",          // west terrace
+] as const;
+
 export function findAdjacentSeats(
   count: number,
   taken: Set<string>,
 ): string[] {
   if (count <= 0) return [];
-  for (const stand of STANDS) {
-    for (let r = 0; r < stand.rows; r++) {
+  for (const blockId of PRIORITY_ORDER) {
+    const block = BLOCK_BY_ID.get(blockId);
+    if (!block) continue;
+    for (let r = 0; r < block.depth; r++) {
       const row = rowLetter(r);
       let runStart = 1;
       let runLen = 0;
-      for (let c = 1; c <= stand.cols; c++) {
-        const id = seatId(stand.id, row, c);
+      for (let c = 1; c <= block.length; c++) {
+        const id = seatId(block.id, row, c);
         if (taken.has(id)) {
           runStart = c + 1;
           runLen = 0;
@@ -111,7 +184,7 @@ export function findAdjacentSeats(
         runLen++;
         if (runLen >= count) {
           return Array.from({ length: count }, (_, i) =>
-            seatId(stand.id, row, runStart + i),
+            seatId(block.id, row, runStart + i),
           );
         }
       }

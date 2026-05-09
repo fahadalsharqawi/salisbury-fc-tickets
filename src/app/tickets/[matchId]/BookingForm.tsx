@@ -7,11 +7,10 @@ import { submitBookingAction } from "@/lib/actions";
 import {
   MAIN_STAND_SURCHARGE,
   SEAT_PX,
-  type StandConfig,
-  type StandId,
+  type BlockConfig,
+  blocksOnSide,
   colsOf,
   findAdjacentSeats,
-  getStand,
   isMainStand,
   parseSeatId,
   rowsOf,
@@ -22,29 +21,46 @@ import { t, type Locale } from "@/lib/i18n";
 import { calcTotal, tierPrices } from "@/lib/pricing";
 import type { MatchWithAvailability, PaymentMethod } from "@/lib/types";
 
-const SEAT_GAP = 4;
-const STAND_PADDING = 8;
+const SEAT_GAP = 3;
+const BLOCK_GAP = 6; // gap between adjacent blocks on the same side
+const STAND_PADDING = 6;
 
+// Width of a row of `n` seats (px), including the gaps between them.
 function unit(n: number): number {
   return n * SEAT_PX + Math.max(0, n - 1) * SEAT_GAP;
 }
 
-const W = getStand("W");
-const E = getStand("E");
-const N = getStand("N");
-const S = getStand("S");
+// Width of a side-strip (sum of block lengths + per-block gaps + padding).
+function sideAcross(blocks: BlockConfig[]): number {
+  if (blocks.length === 0) return 0;
+  const seats = blocks.reduce((sum, b) => sum + unit(b.length), 0);
+  const gaps = (blocks.length - 1) * BLOCK_GAP;
+  return seats + gaps + STAND_PADDING * 2;
+}
 
-const PITCH_W = unit(N.cols);
-const PITCH_H = unit(W.cols);
-const WEST_W = unit(W.rows) + STAND_PADDING * 2;
-const EAST_W = unit(E.rows) + STAND_PADDING * 2;
-const NORTH_H = unit(N.rows) + STAND_PADDING * 2;
-const SOUTH_H = unit(S.rows) + STAND_PADDING * 2;
+// Depth of a side-strip = max depth of its blocks.
+function sideDepth(blocks: BlockConfig[]): number {
+  if (blocks.length === 0) return 0;
+  const maxDepth = Math.max(...blocks.map((b) => b.depth));
+  return unit(maxDepth) + STAND_PADDING * 2;
+}
 
-// Bowl renders at this fixed pixel width; on narrower viewports a
-// ResizeObserver computes a CSS zoom factor that shrinks it to fit. Below
-// MIN_BOWL_SCALE we let it overflow and scroll horizontally rather than
-// make seats unreadable.
+const NORTH = blocksOnSide("north");
+const SOUTH = blocksOnSide("south");
+const EAST = blocksOnSide("east");
+const WEST = blocksOnSide("west");
+
+// Pitch width is constrained by the longer of north/south side. Pitch height
+// is constrained by the longer side of west (a single full-length block).
+const NORTH_W = sideAcross(NORTH);
+const SOUTH_W = sideAcross(SOUTH);
+const PITCH_W = Math.max(NORTH_W, SOUTH_W);
+const PITCH_H = unit(WEST[0]?.length ?? 26) + STAND_PADDING * 2;
+const NORTH_H = sideDepth(NORTH);
+const SOUTH_H = sideDepth(SOUTH);
+const WEST_W = sideDepth(WEST);
+const EAST_W = sideDepth(EAST);
+
 const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
 // Allow shrinking down to 0.35 — at 24px base × 0.35 = ~8px seats, tight
 // but tappable on a high-DPI phone. Below this we let the bowl overflow.
@@ -364,15 +380,15 @@ function Bowl({
       }}
     >
       <Corner />
-      <NorthStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
+      <SideStrip side="north" booked={booked} selected={selected} toggle={toggle} locale={locale} />
       <Corner />
 
-      <WestStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
+      <SideStrip side="west"  booked={booked} selected={selected} toggle={toggle} locale={locale} />
       <Pitch />
-      <EastStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
+      <SideStrip side="east"  booked={booked} selected={selected} toggle={toggle} locale={locale} />
 
       <Corner />
-      <SouthStand booked={booked} selected={selected} toggle={toggle} locale={locale} />
+      <SideStrip side="south" booked={booked} selected={selected} toggle={toggle} locale={locale} />
       <Corner />
     </div>
   );
@@ -382,66 +398,6 @@ function Corner() {
   return <div className="rounded-md bg-stone-200/50" />;
 }
 
-function StandFrame({
-  label,
-  children,
-  axis,
-  kind = "terrace",
-}: {
-  label: string;
-  children: React.ReactNode;
-  axis: "horizontal" | "vertical";
-  kind?: "main" | "terrace";
-}) {
-  // The Main Stand at the Ray Mac is the only fully covered, all-seater
-  // stand; the other three sides are open terraces. Reflect that visually.
-  const isMain = kind === "main";
-  const frameClass = isMain
-    ? "relative rounded-md bg-stone-200 shadow-[inset_0_2px_0_rgba(0,0,0,0.08)] ring-1 ring-stone-300"
-    : "relative rounded-md bg-white/60 ring-1 ring-stone-200";
-  // Vertical labels (Main Stand, East Terrace) get rotated text that
-  // overlaps the seats once iOS upscales sub-12px text — hide on phone.
-  // Horizontal labels (North/South End) sit above/below the seat strip
-  // and don't have that problem.
-  const hideOnMobile = axis === "vertical";
-  const labelBase = `pointer-events-none absolute text-[9px] font-semibold uppercase tracking-[0.2em] [-webkit-text-size-adjust:100%] ${
-    hideOnMobile ? "hidden sm:block" : ""
-  }`;
-  const labelClass = isMain
-    ? `${labelBase} text-sfc-navy`
-    : `${labelBase} text-stone-400`;
-  return (
-    <div className={frameClass} style={{ padding: STAND_PADDING }}>
-      {/* Roof indicator stripe — only on the covered Main Stand */}
-      {isMain && (
-        <div
-          className="pointer-events-none absolute inset-x-1 top-0 h-1 rounded-t-md bg-sfc-navy/85"
-          aria-hidden
-        />
-      )}
-      <div
-        className={labelClass}
-        style={
-          axis === "horizontal"
-            ? { left: 8, right: 8, textAlign: "center", top: 2 }
-            : {
-                top: "50%",
-                left: 4,
-                transform: "translateY(-50%) rotate(-90deg)",
-                transformOrigin: "left center",
-                whiteSpace: "nowrap",
-              }
-        }
-      >
-        {/* "Covered" indicator is the navy roof stripe; keep the label
-            short so it doesn't overlap the seats on narrow viewports. */}
-        {label}
-      </div>
-      {children}
-    </div>
-  );
-}
-
 type SeatGridProps = {
   booked: Set<string>;
   selected: Set<string>;
@@ -449,88 +405,176 @@ type SeatGridProps = {
   locale: Locale;
 };
 
-function NorthStand(p: SeatGridProps) {
+// Renders all blocks on a given side, laid out parallel to the pitch edge,
+// with a small gap between adjacent blocks. Each block has its own frame
+// (and its own roof stripe + label).
+function SideStrip({
+  side,
+  ...p
+}: SeatGridProps & { side: "north" | "south" | "east" | "west" }) {
+  const blocks = blocksOnSide(side);
+  const horizontal = side === "north" || side === "south";
+  // For east/west sides the "across" axis runs vertically; we rotate the
+  // flex direction accordingly. We also align the blocks so that their
+  // pitch-facing rows sit next to the pitch — north blocks bottom-align,
+  // south top-align, west right-align, east left-align.
+  const layout = horizontal
+    ? "flex h-full items-stretch justify-center"
+    : "flex h-full w-full flex-col items-stretch justify-center";
   return (
-    <StandFrame label={t("seats.north-end", p.locale)} axis="horizontal">
-      <div
-        className="flex flex-col items-center justify-end"
-        style={{ gap: SEAT_GAP, height: "100%" }}
-      >
-        {rowsOf(N).slice().reverse().map((row) => (
-          <SeatRow key={row} stand={N} row={row} direction="row" {...p} />
-        ))}
-      </div>
-    </StandFrame>
+    <div
+      className={layout}
+      style={{
+        gap: BLOCK_GAP,
+        padding: STAND_PADDING,
+      }}
+    >
+      {blocks.map((b) => (
+        <Block key={b.id} block={b} side={side} {...p} />
+      ))}
+    </div>
   );
 }
 
-function SouthStand(p: SeatGridProps) {
+function Block({
+  block,
+  side,
+  booked,
+  selected,
+  toggle,
+}: SeatGridProps & {
+  block: BlockConfig;
+  side: "north" | "south" | "east" | "west";
+}) {
+  const horizontal = side === "north" || side === "south";
+  // Rows go from "front" (pitch-facing) to "back". The pitch-facing row sits
+  // closest to the pitch; we align children so it ends up adjacent.
+  const rows = rowsOf(block);
+  // Reverse for north/west so row A is closest to the pitch (bottom-most for
+  // a north stand, right-most for the west stand). South/east render in
+  // natural order so row A is again pitch-facing (top-most / left-most).
+  const orderedRows = side === "north" || side === "west" ? rows.slice().reverse() : rows;
+
+  // The "frame" is the per-block rectangle: light fill for terraces, slightly
+  // darker for all-seater main-stand blocks, with a navy roof stripe on the
+  // seated blocks.
+  const frameClass = block.isSeated
+    ? "relative rounded-md bg-stone-200 shadow-[inset_0_2px_0_rgba(0,0,0,0.08)] ring-1 ring-stone-300"
+    : "relative rounded-md bg-white/65 ring-1 ring-stone-200";
+
   return (
-    <StandFrame label={t("seats.south-end", p.locale)} axis="horizontal">
+    <div className={frameClass} style={{ padding: STAND_PADDING }}>
+      {block.isSeated && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-1 top-0 h-1 rounded-t-md bg-sfc-navy/85"
+        />
+      )}
+      <BlockLabel block={block} side={side} />
       <div
-        className="flex flex-col items-center justify-start"
-        style={{ gap: SEAT_GAP, height: "100%" }}
+        className={
+          horizontal
+            ? "flex flex-col items-center"
+            : "flex h-full items-stretch"
+        }
+        style={{
+          gap: SEAT_GAP,
+          // Anchor pitch-facing edge to the pitch.
+          justifyContent: side === "north"
+            ? "flex-end"
+            : side === "south"
+              ? "flex-start"
+              : side === "west"
+                ? "flex-end"
+                : "flex-start",
+          height: horizontal ? "100%" : undefined,
+        }}
       >
-        {rowsOf(S).map((row) => (
-          <SeatRow key={row} stand={S} row={row} direction="row" {...p} />
+        {orderedRows.map((row) => (
+          <SeatRow
+            key={row}
+            block={block}
+            row={row}
+            direction={horizontal ? "row" : "col"}
+            booked={booked}
+            selected={selected}
+            toggle={toggle}
+          />
         ))}
       </div>
-    </StandFrame>
+    </div>
   );
 }
 
-function WestStand(p: SeatGridProps) {
-  return (
-    <StandFrame label={t("seats.main-stand", p.locale)} axis="vertical" kind="main">
-      <div
-        className="flex h-full items-stretch justify-end"
-        style={{ gap: SEAT_GAP }}
+function BlockLabel({
+  block,
+  side,
+}: {
+  block: BlockConfig;
+  side: "north" | "south" | "east" | "west";
+}) {
+  // East/west labels are rotated and tend to overlap seats on narrow phones,
+  // so hide them there. North/south sit above/below the strip and stay.
+  const hideOnMobile = side === "east" || side === "west";
+  const cls = `pointer-events-none absolute text-[8px] font-bold uppercase tracking-[0.18em] [-webkit-text-size-adjust:100%] ${
+    block.isSeated ? "text-sfc-navy" : "text-stone-400"
+  } ${hideOnMobile ? "hidden sm:block" : ""}`;
+  if (side === "north" || side === "south") {
+    return (
+      <span
+        className={cls}
+        style={{
+          top: side === "north" ? 1 : undefined,
+          bottom: side === "south" ? 1 : undefined,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+        }}
       >
-        {rowsOf(W).slice().reverse().map((row) => (
-          <SeatRow key={row} stand={W} row={row} direction="col" {...p} />
-        ))}
-      </div>
-    </StandFrame>
-  );
-}
-
-function EastStand(p: SeatGridProps) {
+        {block.short ?? block.name}
+      </span>
+    );
+  }
   return (
-    <StandFrame label={t("seats.east-terrace", p.locale)} axis="vertical">
-      <div
-        className="flex h-full items-stretch justify-start"
-        style={{ gap: SEAT_GAP }}
-      >
-        {rowsOf(E).map((row) => (
-          <SeatRow key={row} stand={E} row={row} direction="col" {...p} />
-        ))}
-      </div>
-    </StandFrame>
+    <span
+      className={cls}
+      style={{
+        top: "50%",
+        left: 4,
+        transform: "translateY(-50%) rotate(-90deg)",
+        transformOrigin: "left center",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {block.short ?? block.name}
+    </span>
   );
 }
 
 function SeatRow({
-  stand,
+  block,
   row,
   direction,
   booked,
   selected,
   toggle,
-}: SeatGridProps & {
-  stand: StandConfig;
+}: {
+  block: BlockConfig;
   row: string;
   direction: "row" | "col";
+  booked: Set<string>;
+  selected: Set<string>;
+  toggle: (id: string) => void;
 }) {
   return (
     <div
       className={direction === "row" ? "flex" : "flex flex-col"}
       style={{ gap: SEAT_GAP }}
     >
-      {colsOf(stand).map((col) => {
-        const id = seatId(stand.id, row, col);
+      {colsOf(block).map((col) => {
+        const id = seatId(block.id, row, col);
         const isBooked = booked.has(id);
         const isSelected = selected.has(id);
-        const seated = isMainStand(stand.id);
         return (
           <SeatBtn
             key={id}
@@ -538,8 +582,8 @@ function SeatRow({
             label={col.toString()}
             booked={isBooked}
             selected={isSelected}
-            seated={seated}
-            standId={stand.id}
+            seated={block.isSeated}
+            side={block.side}
             onClick={() => toggle(id)}
           />
         );
@@ -554,7 +598,7 @@ function SeatBtn({
   booked,
   selected,
   seated,
-  standId,
+  side,
   onClick,
 }: {
   id: string;
@@ -562,17 +606,19 @@ function SeatBtn({
   booked: boolean;
   selected: boolean;
   seated: boolean;
-  standId: StandId;
+  side: "north" | "south" | "east" | "west";
   onClick: () => void;
 }) {
+  // Round the pitch-facing edge of the seat so seats look like they "face"
+  // the pitch (the rounded edge is on the pitch side).
   const facingClass =
-    standId === "N"
+    side === "north"
       ? "rounded-b-md"
-      : standId === "S"
+      : side === "south"
         ? "rounded-t-md"
-        : standId === "W"
-          ? "rounded-l-md"
-          : "rounded-r-md";
+        : side === "west"
+          ? "rounded-r-md"
+          : "rounded-l-md";
 
   const reduce = useReducedMotion();
   return (
