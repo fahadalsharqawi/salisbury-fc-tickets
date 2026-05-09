@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Currency } from "@/lib/format";
@@ -27,15 +27,6 @@ const NAV_KEYS = [
   { href: "/contact", key: "nav.contact" },
 ] as const;
 
-const linkItem: Variants = {
-  hidden: { opacity: 0, x: 20 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-  },
-};
-
 export default function MobileNav({ locale, currency }: Props) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
@@ -52,16 +43,6 @@ export default function MobileNav({ locale, currency }: Props) {
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  const linkStagger: Variants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: reduce ? 0 : 0.04,
-        delayChildren: reduce ? 0 : 0.08,
-      },
-    },
-  };
 
   return (
     <>
@@ -139,24 +120,18 @@ export default function MobileNav({ locale, currency }: Props) {
                 </motion.button>
               </div>
 
-              <motion.nav
-                variants={linkStagger}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
-              >
+              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
                 {NAV_KEYS.map((n) => (
-                  <motion.div key={n.href} variants={linkItem}>
-                    <Link
-                      href={n.href}
-                      onClick={() => setOpen(false)}
-                      className="block rounded-xl px-4 py-3 text-[15px] font-semibold text-sfc-ink hover:bg-sfc-bone"
-                    >
-                      {t(n.key, locale)}
-                    </Link>
-                  </motion.div>
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    onClick={() => setOpen(false)}
+                    className="block rounded-xl px-4 py-3 text-[15px] font-semibold text-sfc-ink hover:bg-sfc-bone"
+                  >
+                    {t(n.key, locale)}
+                  </Link>
                 ))}
-              </motion.nav>
+              </nav>
 
               <div className="space-y-3 border-t border-sfc-n-200 px-5 py-4">
                 <PillForm
