@@ -683,32 +683,72 @@ function SeatBtn({
 }
 
 function Pitch() {
+  // Landscape pitch: long axis horizontal, goals on the left and right ends.
+  // viewBox is 156×100, the real FA-regulation 105m × 68m ratio (≈1.54).
+  // The container is forced to a similar ratio by the bowl grid, so
+  // preserveAspectRatio="none" only stretches a few percent on either axis.
   return (
     <div className="relative h-full w-full overflow-hidden rounded-md shadow-inner ring-1 ring-emerald-900/30">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700" />
+      {/* Base turf — diagonal-ish gradient gives a slight depth feel */}
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700" />
+      {/* Vertical mowing stripes — parallel to the goal-to-goal long axis */}
       <div
-        className="absolute inset-0 opacity-25"
+        aria-hidden
+        className="absolute inset-0 opacity-30"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(0deg, transparent 0 18px, rgba(255,255,255,0.12) 18px 36px)",
+            "repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 36px, rgba(255,255,255,0.10) 36px 72px)",
+        }}
+      />
+      {/* Soft vignette so the centre reads brighter */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 60%)",
         }}
       />
       <svg
-        viewBox="0 0 100 140"
+        viewBox="0 0 156 100"
         preserveAspectRatio="none"
         className="absolute inset-0 h-full w-full"
         aria-hidden
       >
-        <rect x="2" y="2" width="96" height="136" fill="none" stroke="white" strokeWidth="0.6" strokeOpacity="0.85" />
-        <line x1="2" y1="70" x2="98" y2="70" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <circle cx="50" cy="70" r="9" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <circle cx="50" cy="70" r="0.8" fill="white" />
-        <rect x="22" y="2" width="56" height="14" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <rect x="36" y="2" width="28" height="6" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <circle cx="50" cy="11" r="0.8" fill="white" />
-        <rect x="22" y="124" width="56" height="14" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <rect x="36" y="132" width="28" height="6" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.85" />
-        <circle cx="50" cy="129" r="0.8" fill="white" />
+        {/* Outer touchline + goal line */}
+        <rect
+          x="2" y="2" width="152" height="96"
+          fill="none" stroke="white" strokeWidth="0.45" strokeOpacity="0.9"
+        />
+        {/* Halfway line + centre circle + centre spot */}
+        <line x1="78" y1="2" x2="78" y2="98" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <circle cx="78" cy="50" r="9.15" fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <circle cx="78" cy="50" r="0.7" fill="white" />
+
+        {/* Left penalty area (16.5m × 40.3m) and goal area (5.5m × 18.3m) */}
+        <rect x="2"  y="29.85" width="16.5" height="40.3" fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <rect x="2"  y="40.85" width="5.5"  height="18.3" fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <circle cx="13" cy="50" r="0.7" fill="white" />
+        {/* Left penalty arc — only the part outside the box is drawn (the "D"). */}
+        <path
+          d="M 19.65,42.85 a 9.15,9.15 0 0 1 0,14.3"
+          fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9"
+        />
+
+        {/* Right penalty area + goal area */}
+        <rect x="137.5" y="29.85" width="16.5" height="40.3" fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <rect x="148.5" y="40.85" width="5.5"  height="18.3" fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9" />
+        <circle cx="143" cy="50" r="0.7" fill="white" />
+        <path
+          d="M 136.35,42.85 a 9.15,9.15 0 0 0 0,14.3"
+          fill="none" stroke="white" strokeWidth="0.35" strokeOpacity="0.9"
+        />
+
+        {/* Corner arcs */}
+        <path d="M 2,4 a 2,2 0 0 1 2,-2"     fill="none" stroke="white" strokeWidth="0.3" strokeOpacity="0.9" />
+        <path d="M 154,4 a 2,2 0 0 0 -2,-2"  fill="none" stroke="white" strokeWidth="0.3" strokeOpacity="0.9" />
+        <path d="M 2,96 a 2,2 0 0 0 2,2"     fill="none" stroke="white" strokeWidth="0.3" strokeOpacity="0.9" />
+        <path d="M 154,96 a 2,2 0 0 1 -2,2"  fill="none" stroke="white" strokeWidth="0.3" strokeOpacity="0.9" />
       </svg>
     </div>
   );
