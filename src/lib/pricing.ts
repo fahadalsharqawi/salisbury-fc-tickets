@@ -52,7 +52,7 @@ export function calcTotal(opts: {
     opts.counts.under5Count * t.under5;
   const mainStandSeats = opts.seats.filter((s) => {
     const p = parseSeatId(s);
-    return p ? isMainStand(p.stand) : false;
+    return p ? isMainStand(p.blockId) : false;
   }).length;
   return tierTotal + mainStandSeats * MAIN_STAND_SURCHARGE;
 }
