@@ -43,7 +43,7 @@ const PACKAGES = [
 export default function HospitalityPage() {
   return (
     <>
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-8 sm:py-12">
           <div className="sfc-eyebrow sfc-eyebrow--on-dark">The Ray Mac</div>
           <h1 className="sfc-display mt-1 text-3xl font-bold leading-[1.05] sm:text-5xl">

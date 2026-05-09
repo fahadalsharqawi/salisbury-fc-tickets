@@ -7,7 +7,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       {/* Page strip */}
-      <div className="bg-sfc-navy text-white">
+      <div className="sfc-band">
         <div className="sfc-container py-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
