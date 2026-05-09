@@ -72,6 +72,43 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
   const [under17Count, setUnder17Count] = useState(0);
   const [under5Count, setUnder5Count] = useState(0);
 
+  // Persist seat selection across refreshes so a tab reload doesn't wipe what
+  // the user already picked. Scoped per match so different matches don't
+  // share state. Drop any persisted seats that have since been booked by
+  // someone else.
+  const storageKey = `sfc-seats:${match.id}`;
+  const hydrated = useRef(false);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return;
+      const restored = new Set(
+        parsed.filter((s): s is string => typeof s === "string" && !booked.has(s)),
+      );
+      if (restored.size > 0) setSelected(restored);
+    } catch {
+      // ignore — storage may be unavailable, malformed, etc.
+    } finally {
+      hydrated.current = true;
+    }
+    // Only run on mount; `booked` is stable for the lifetime of the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      if (selected.size === 0) {
+        localStorage.removeItem(storageKey);
+      } else {
+        localStorage.setItem(storageKey, JSON.stringify([...selected]));
+      }
+    } catch {
+      // ignore
+    }
+  }, [selected, storageKey]);
+
   // Auto-fit the bowl. On phone viewports we target a fraction of the
   // container width so the pitch + stands stay compact.
   const bowlContainerRef = useRef<HTMLDivElement>(null);
@@ -150,6 +187,16 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
   return (
     <form
       action={submitBookingAction}
+      onSubmit={() => {
+        // The form action redirects on success — clear the persisted
+        // selection so a "back" navigation to the booking page doesn't
+        // re-show the seats they just bought.
+        try {
+          localStorage.removeItem(storageKey);
+        } catch {
+          // ignore
+        }
+      }}
       className="grid gap-8 lg:grid-cols-[1fr_360px]"
     >
       <input type="hidden" name="matchId" value={match.id} />
