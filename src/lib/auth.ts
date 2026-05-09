@@ -90,51 +90,31 @@ export async function signInWithGoogleAction(formData: FormData) {
   redirect(data.url);
 }
 
+// Apple and Microsoft providers aren't wired to a real OAuth app for the
+// demo. The buttons just round-trip the form submission so the page
+// "refreshes" — no error, no redirect to an unconfigured provider.
 export async function signInWithMicrosoftAction(formData: FormData) {
-  const next = String(formData.get("next") ?? "/");
-  const supabase = await createClient();
-  // Supabase calls the Microsoft / Entra ID provider "azure".
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "azure",
-    options: {
-      redirectTo: await callbackUrl(next),
-      // openid + email + profile gets us the basic user info we display.
-      scopes: "openid email profile",
-      queryParams: { prompt: "select_account" },
-    },
-  });
-  if (error || !data.url) {
-    redirect(
-      "/sign-in?error=" +
-        encodeURIComponent(
-          error?.message ??
-            "Microsoft sign-in isn't configured yet. Use email + password for now.",
-        ),
-    );
-  }
-  redirect(data.url);
+  // Redirect back to the page the form was submitted from so the
+  // browser ends up exactly where it started.
+  const referer = (await headers()).get("referer");
+  redirect(referer && safeReferer(referer) ? referer : "/sign-in");
 }
 
 export async function signInWithAppleAction(formData: FormData) {
-  const next = String(formData.get("next") ?? "/");
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "apple",
-    options: {
-      redirectTo: await callbackUrl(next),
-      // Apple returns first/last name only on the very first sign-in,
-      // so request both name and email scopes up front.
-      scopes: "name email",
-    },
-  });
-  if (error || !data.url) {
-    redirect(
-      "/sign-in?error=" +
-        encodeURIComponent(
-          error?.message ??
-            "Apple sign-in isn't configured yet. Use email + password for now.",
-        ),
-    );
+  const referer = (await headers()).get("referer");
+  redirect(referer && safeReferer(referer) ? referer : "/sign-in");
+}
+
+// Only follow the referer when it points back at our own host — guards
+// against an attacker-controlled Referer header redirecting somewhere else.
+function safeReferer(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === "salisburyfc.vercel.app" ||
+      u.hostname.endsWith(".vercel.app") ||
+      u.hostname === "localhost" ||
+      u.hostname === "127.0.0.1";
+  } catch {
+    return false;
   }
-  redirect(data.url);
 }
