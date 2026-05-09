@@ -1,4 +1,6 @@
 import Link from "next/link";
+import NumberCounter from "@/components/anim/NumberCounter";
+import TextScroll from "@/components/anim/TextScroll";
 import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { STADIUM } from "@/lib/club";
 import { localize, t } from "@/lib/i18n";
@@ -13,12 +15,17 @@ export const metadata = {
 const MAP_QUERY =
   "Salisbury FC, Partridge Way, Old Sarum, near Salisbury, SP4 6PU";
 
-const STATS = [
-  { label: "Capacity", value: "4,000", note: "5,000 technical max" },
-  { label: "Covered", value: "2,247", note: "all-seater Main Stand" },
-  { label: "Opened", value: "1997", note: "purpose-built ground" },
-  { label: "Grade", value: "B", note: "FA standard" },
-] as const;
+const STATS: ReadonlyArray<{
+  label: string;
+  numericTo?: number;
+  display: string;
+  note: string;
+}> = [
+  { label: "Capacity", numericTo: 4000, display: "4,000", note: "5,000 technical max" },
+  { label: "Covered", numericTo: 2247, display: "2,247", note: "all-seater Main Stand" },
+  { label: "Opened", numericTo: 1997, display: "1997", note: "purpose-built ground" },
+  { label: "Grade", display: "B", note: "FA standard" },
+];
 
 const NOTABLE_MATCHES = [
   {
@@ -78,7 +85,11 @@ export default async function RayMacStadiumPage() {
             >
               <div className="sfc-eyebrow text-sfc-n-500">{s.label}</div>
               <div className="sfc-display mt-1 text-3xl font-bold leading-none text-sfc-navy">
-                {s.value}
+                {s.numericTo != null ? (
+                  <NumberCounter to={s.numericTo} duration={1.6} />
+                ) : (
+                  s.display
+                )}
               </div>
               <div className="mt-1 text-xs text-sfc-n-500">{s.note}</div>
             </MotionItem>
@@ -154,9 +165,10 @@ export default async function RayMacStadiumPage() {
 
         {/* Notable matches */}
         <section className="mt-10">
-          <h2 className="sfc-display anim-fade-up text-2xl font-bold">
-            Notable matches at the Ray Mac
-          </h2>
+          <TextScroll
+            text="Notable matches at the Ray Mac"
+            className="sfc-display text-2xl font-bold"
+          />
           <MotionStagger
             as="ul"
             className="mt-5 grid gap-3 sm:grid-cols-3"
