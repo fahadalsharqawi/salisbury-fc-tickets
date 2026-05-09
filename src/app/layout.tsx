@@ -179,12 +179,6 @@ export default async function RootLayout({
                   Sign in
                 </Link>
               )}
-              <Link
-                href="/tickets"
-                className="sfc-btn sfc-btn--live sfc-btn--sm hidden sm:inline-flex"
-              >
-                {t("nav.fixtures", locale)}
-              </Link>
               <MobileNav
                 locale={locale}
                 currency={currency}
