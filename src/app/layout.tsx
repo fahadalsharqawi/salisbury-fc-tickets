@@ -180,7 +180,13 @@ export default async function RootLayout({
               >
                 {t("nav.fixtures", locale)}
               </Link>
-              <MobileNav locale={locale} currency={currency} />
+              <MobileNav
+                locale={locale}
+                currency={currency}
+                isAuthed={Boolean(user)}
+                displayName={displayName}
+                signOutAction={signOutAction}
+              />
             </div>
           </div>
         </header>

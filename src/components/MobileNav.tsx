@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Currency } from "@/lib/format";
@@ -16,18 +17,32 @@ import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 type Props = {
   locale: Locale;
   currency: Currency;
+  isAuthed: boolean;
+  displayName: string | null;
+  signOutAction: (formData: FormData) => Promise<void>;
 };
 
-const NAV_KEYS = [
+// Primary destinations — large bold links at the top of the drawer.
+const PRIMARY = [
   { href: "/tickets", key: "nav.fixtures" },
   { href: "/club", key: "nav.club" },
   { href: "/club/hospitality", key: "nav.hospitality" },
-  { href: "/live-commentaries", key: "nav.live-commentaries" },
   { href: "/news", key: "nav.news" },
   { href: "/contact", key: "nav.contact" },
 ] as const;
 
-export default function MobileNav({ locale, currency }: Props) {
+// Secondary destinations — slimmer rows below the promo banner.
+const SECONDARY = [
+  { href: "/live-commentaries", key: "nav.live-commentaries" },
+] as const;
+
+export default function MobileNav({
+  locale,
+  currency,
+  isAuthed,
+  displayName,
+  signOutAction,
+}: Props) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
 
@@ -90,52 +105,136 @@ export default function MobileNav({ locale, currency }: Props) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="absolute end-0 top-0 flex h-full w-[88vw] max-w-sm flex-col rounded-s-3xl bg-gradient-to-b from-white via-sfc-sky-light/30 to-sfc-sky-light shadow-2xl rtl:end-auto rtl:start-0 rtl:rounded-e-3xl rtl:rounded-s-none"
+              className="absolute end-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl rtl:end-auto rtl:start-0"
             >
-              <div className="flex items-center justify-between border-b border-sfc-n-200 bg-sfc-bone px-5 py-4">
-                <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-sfc-navy">
-                  Menu
-                </span>
+              {/* Header — close (X), crest, and Sign in / Sign out pill */}
+              <div className="flex items-center gap-3 border-b border-sfc-n-100 px-4 py-3">
                 <motion.button
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label={t("nav.close-menu", locale)}
                   whileTap={reduce ? undefined : { scale: 0.9, rotate: 90 }}
                   transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-sfc-ink hover:bg-sfc-bone"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sfc-ink hover:bg-sfc-bone"
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    aria-hidden
-                  >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                     <path d="M6 6l12 12" />
                     <path d="M18 6L6 18" />
                   </svg>
                 </motion.button>
+                <Link
+                  href="/"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center"
+                  aria-label={t("brand.name", locale)}
+                >
+                  <Image
+                    src="/logo.png"
+                    alt=""
+                    width={36}
+                    height={36}
+                    className="h-9 w-9"
+                  />
+                </Link>
+                <div className="ms-auto">
+                  {isAuthed ? (
+                    <form action={signOutAction}>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-sfc-navy/30 px-3.5 py-1.5 text-[13px] font-semibold text-sfc-navy transition hover:bg-sfc-navy hover:text-white"
+                      >
+                        <UserGlyph />
+                        {displayName ? truncate(displayName, 14) : "Sign out"}
+                      </button>
+                    </form>
+                  ) : (
+                    <Link
+                      href="/sign-in"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-sfc-navy/30 px-3.5 py-1.5 text-[13px] font-semibold text-sfc-navy transition hover:bg-sfc-navy hover:text-white"
+                    >
+                      <UserGlyph />
+                      Sign in
+                    </Link>
+                  )}
+                </div>
               </div>
 
-              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-                {NAV_KEYS.map((n) => (
-                  <Link
-                    key={n.href}
-                    href={n.href}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-xl px-4 py-3 text-[15px] font-semibold text-sfc-ink hover:bg-sfc-bone"
-                  >
-                    {t(n.key, locale)}
-                  </Link>
-                ))}
-              </nav>
+              {/* Scrollable body */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Primary nav — large bold list */}
+                <nav className="flex flex-col">
+                  {PRIMARY.map((n) => (
+                    <Link
+                      key={n.href}
+                      href={n.href}
+                      onClick={() => setOpen(false)}
+                      className="sfc-display flex items-center justify-between border-b border-sfc-n-100 px-5 py-5 text-[22px] font-bold tracking-[-0.01em] text-sfc-ink transition active:bg-sfc-bone"
+                    >
+                      <span>{t(n.key, locale)}</span>
+                      <Chevron />
+                    </Link>
+                  ))}
+                </nav>
 
-              <div className="space-y-3 border-t border-sfc-n-200 px-5 py-4">
+                {/* Promo banner — gradient with CTA */}
+                <Link
+                  href="/tickets"
+                  onClick={() => setOpen(false)}
+                  className="relative mx-5 my-5 block overflow-hidden rounded-2xl"
+                >
+                  <div
+                    className="relative px-5 py-6 text-white"
+                    style={{ background: "var(--grad-band)" }}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(ellipse at 90% 20%, rgba(184,212,232,0.55), transparent 60%)",
+                      }}
+                    />
+                    <div className="relative flex items-center gap-4">
+                      <Image
+                        src="/logo.png"
+                        alt=""
+                        width={56}
+                        height={56}
+                        className="h-14 w-14 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+                      />
+                      <div className="min-w-0">
+                        <div className="sfc-display text-[18px] font-bold leading-tight">
+                          {t("hero.pick-a-seat", locale)}
+                        </div>
+                        <div className="mt-0.5 text-[12px] text-sfc-sky-light">
+                          {t("hero.tickets-on-sale", locale)}
+                        </div>
+                      </div>
+                      <span aria-hidden className="ms-auto text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Secondary nav — slimmer rows */}
+                <nav className="flex flex-col border-t border-sfc-n-100">
+                  {SECONDARY.map((n) => (
+                    <Link
+                      key={n.href}
+                      href={n.href}
+                      onClick={() => setOpen(false)}
+                      className="sfc-display flex items-center justify-between border-b border-sfc-n-100 px-5 py-4 text-[16px] font-bold text-sfc-ink transition active:bg-sfc-bone"
+                    >
+                      <span>{t(n.key, locale)}</span>
+                      <Chevron />
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Bottom strip — locale + currency pills */}
+              <div className="space-y-2.5 border-t border-sfc-n-100 bg-sfc-bone px-5 py-4">
                 <PillForm
-                  label={t("nav.menu", locale)}
                   action={setLocaleAction}
                   name="locale"
                   options={SUPPORTED_LOCALES}
@@ -153,13 +252,6 @@ export default function MobileNav({ locale, currency }: Props) {
                   ) as Record<string, string>}
                   onSubmit={() => setOpen(false)}
                 />
-                <Link
-                  href="/tickets"
-                  onClick={() => setOpen(false)}
-                  className="sfc-btn sfc-btn--primary press w-full"
-                >
-                  {t("nav.fixtures", locale)}
-                </Link>
               </div>
             </motion.div>
           </div>
@@ -167,6 +259,49 @@ export default function MobileNav({ locale, currency }: Props) {
       </AnimatePresence>
     </>
   );
+}
+
+function Chevron() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="text-sfc-n-400 rtl:scale-x-[-1]"
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function UserGlyph() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function truncate(s: string, n: number): string {
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1) + "…";
 }
 
 function PillForm({
@@ -177,7 +312,6 @@ function PillForm({
   labels,
   onSubmit,
 }: {
-  label?: string;
   action: (formData: FormData) => Promise<void>;
   name: string;
   options: readonly string[];
@@ -189,7 +323,7 @@ function PillForm({
     <form
       action={action}
       onSubmit={onSubmit}
-      className="relative flex items-center gap-1 rounded-full border border-sfc-n-200 bg-sfc-bone p-1"
+      className="relative flex items-center gap-1 rounded-full border border-sfc-n-200 bg-white p-1"
     >
       {options.map((opt) => {
         const isActive = active === opt;
@@ -208,7 +342,7 @@ function PillForm({
               <motion.span
                 layoutId={`mobile-pill-${name}`}
                 aria-hidden
-                className="absolute inset-0 z-[-1] rounded-full bg-white shadow-[0_1px_2px_rgba(12,22,54,0.08)]"
+                className="absolute inset-0 z-[-1] rounded-full bg-sfc-bone shadow-[0_1px_2px_rgba(12,22,54,0.08)]"
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
