@@ -170,14 +170,40 @@ export async function getMatch(
   return withAvailability(rowToMatch(data as MatchRow), booked);
 }
 
-export async function listBookings(opts?: { userId?: string }): Promise<Booking[]> {
+export async function listBookings(opts?: {
+  userId?: string;
+  /** Optional status filter — pushed to the DB so we don't re-pull rows
+   *  the admin will throw away. */
+  status?: BookingStatus;
+  /** Substring search across customer name + email (case-insensitive). */
+  search?: string;
+  /** Cap rows returned. Defaults to 200 — the admin table doesn't paginate
+   *  yet, and pulling thousands of rows on every render makes the page
+   *  noticeably slow. */
+  limit?: number;
+}): Promise<Booking[]> {
   const supabase = createAdminClient();
+  const limit = opts?.limit ?? 200;
   let query = supabase
     .from("bookings")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(limit);
   if (opts?.userId) {
     query = query.eq("user_id", opts.userId);
+  }
+  if (opts?.status) {
+    query = query.eq("status", opts.status);
+  }
+  if (opts?.search) {
+    const needle = opts.search.replace(/[,()]/g, " ").trim();
+    if (needle) {
+      // Match either customer_name or email; PostgREST `or` filter syntax.
+      const escaped = needle.replace(/[%_]/g, "\\$&");
+      query = query.or(
+        `customer_name.ilike.%${escaped}%,email.ilike.%${escaped}%`,
+      );
+    }
   }
   const { data, error } = await query;
   if (error) throw new Error(error.message);
