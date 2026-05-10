@@ -1270,8 +1270,11 @@ function PayButton({
           <PendingLabel text={t("pay.pending.apple", locale)} />
         ) : (
           <>
-            <AppleMark />
-            <span>{t("pay.button.apple-pay", locale, { amount })}</span>
+            <ApplePayWordmark />
+            <span aria-hidden>· {amount}</span>
+            <span className="sr-only">
+              {t("pay.button.apple-pay", locale, { amount })}
+            </span>
           </>
         )}
       </motion.button>
@@ -1352,16 +1355,24 @@ function Spinner({ tone }: { tone?: "dark" }) {
   );
 }
 
-function AppleMark() {
+// Apple Pay wordmark — the apple glyph and "Pay" rendered as a single
+// tightly-kerned unit so the button reads exactly as the official logo.
+function ApplePayWordmark() {
   return (
-    <svg
-      viewBox="0 0 24 24"
+    <span
       aria-hidden
-      className="h-5 w-5"
-      fill="currentColor"
+      className="inline-flex items-center gap-1.5 leading-none"
     >
-      <path d="M16.36 12.56c0-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.81 0-2.07-.92-3.4-.9-1.75.03-3.36 1.01-4.26 2.58-1.82 3.16-.46 7.83 1.3 10.4.86 1.25 1.88 2.66 3.21 2.62 1.29-.05 1.78-.84 3.34-.84s2 .84 3.37.81c1.39-.02 2.27-1.27 3.12-2.53.99-1.45 1.39-2.86 1.41-2.93-.03-.01-2.71-1.04-2.6-4.2zm-2.62-7.7c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.97-1.08 3.14 1.14.09 2.3-.58 3.01-1.43z" />
-    </svg>
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[1.15em] w-[1.15em]"
+        fill="currentColor"
+        aria-hidden
+      >
+        <path d="M16.36 12.56c0-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.81 0-2.07-.92-3.4-.9-1.75.03-3.36 1.01-4.26 2.58-1.82 3.16-.46 7.83 1.3 10.4.86 1.25 1.88 2.66 3.21 2.62 1.29-.05 1.78-.84 3.34-.84s2 .84 3.37.81c1.39-.02 2.27-1.27 3.12-2.53.99-1.45 1.39-2.86 1.41-2.93-.03-.01-2.71-1.04-2.6-4.2zm-2.62-7.7c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.97-1.08 3.14 1.14.09 2.3-.58 3.01-1.43z" />
+      </svg>
+      <span className="font-semibold tracking-tight">Pay</span>
+    </span>
   );
 }
 
