@@ -146,6 +146,7 @@ export default async function ClubAboutPage() {
             stagger={0.04}
           >
             {[
+              { href: "/results/first-team", title: "First-team results", body: "Every result this season, grouped by month." },
               { href: "/club/history", title: "Club history", body: "1947 to today — a short history of the Whites." },
               { href: "/club/officials", title: "Club officials", body: "Board, directors and operational officials." },
               { href: "/club/ray-mac-stadium", title: "Raymond McEnhill Stadium", body: "The Ray Mac — capacity, address, history." },
