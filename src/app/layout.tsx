@@ -3,7 +3,6 @@ import { Inter, Manrope, Noto_Sans_Arabic, Oswald } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
-import CursorDotTrail from "@/components/anim/CursorDotTrail";
 import BrandLink from "@/components/BrandLink";
 import MobileNav from "@/components/MobileNav";
 import ScrollProgress from "@/components/ScrollProgress";
@@ -109,7 +108,6 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-sfc-ink">
         <SitePreloader />
         <ScrollProgress />
-        <CursorDotTrail />
         <ScrollReveal />
         <header className="sticky top-0 z-50 border-b border-sfc-n-200/70 bg-white/85 backdrop-blur-md">
           <div className="sfc-container flex h-16 items-center gap-3 sm:h-[72px]">
