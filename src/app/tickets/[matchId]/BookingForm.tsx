@@ -513,12 +513,13 @@ function BlockLabel({
   block: BlockConfig;
   side: "north" | "south" | "east" | "west";
 }) {
-  // East/west labels are rotated and tend to overlap seats on narrow phones,
-  // so hide them there. North/south sit above/below the strip and stay.
-  const hideOnMobile = side === "east" || side === "west";
-  const cls = `pointer-events-none absolute text-[8px] font-bold uppercase tracking-[0.18em] [-webkit-text-size-adjust:100%] ${
+  // The bowl gets CSS-zoomed on phone-width viewports (often below 0.5x),
+  // and iOS Safari enforces a minimum on-screen font size that leaves the
+  // labels too big for the zoomed-down seats — they end up overlapping the
+  // seat tiles. Hide labels on mobile and only show them at sm+.
+  const cls = `pointer-events-none absolute hidden sm:block text-[8px] font-bold uppercase tracking-[0.18em] [-webkit-text-size-adjust:100%] ${
     block.isSeated ? "text-sfc-navy" : "text-stone-400"
-  } ${hideOnMobile ? "hidden sm:block" : ""}`;
+  }`;
   if (side === "north" || side === "south") {
     return (
       <span
