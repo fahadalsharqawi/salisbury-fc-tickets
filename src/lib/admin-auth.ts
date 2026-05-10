@@ -88,19 +88,24 @@ export async function adminSignInAction(formData: FormData) {
 
     stage = "db-lookup";
     const supabase = createAdminClient();
-    const { data: row } = await supabase
+    const { data: row, error: dbErr } = await supabase
       .from("admin_users")
       .select("id, username, password_hash, name, role")
       .ilike("username", username)
       .maybeSingle();
 
-    stage = "bcrypt";
-    // Run bcrypt either way to avoid timing-leaking whether the username exists.
-    const hash = row?.password_hash ?? "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalida";
-    const ok = await bcrypt.compare(password, hash);
+    if (dbErr) {
+      redirect("/admin/sign-in?error=" + encodeURIComponent(`[db] ${dbErr.message}`.slice(0, 400)));
+    }
 
-    if (!row || !ok) {
-      redirect("/admin/sign-in?error=" + encodeURIComponent("Invalid username or password."));
+    stage = "bcrypt";
+    if (!row) {
+      redirect("/admin/sign-in?error=" + encodeURIComponent(`[no-row] username=${username}`));
+    }
+    const ok = await bcrypt.compare(password, row.password_hash);
+
+    if (!ok) {
+      redirect("/admin/sign-in?error=" + encodeURIComponent(`[bad-pw] hashLen=${row.password_hash.length} hashPrefix=${row.password_hash.slice(0, 7)} pwLen=${password.length}`));
     }
 
     stage = "update";
