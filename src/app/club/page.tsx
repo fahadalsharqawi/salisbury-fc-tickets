@@ -37,6 +37,26 @@ export default async function ClubPage() {
           <p className="mt-2 max-w-2xl text-sm text-sfc-sky-light">
             {t("club.subtitle", locale, { league: localize(LEAGUE.league, locale) })}
           </p>
+          <nav className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href="/club/about"
+              className="sfc-display rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white ring-1 ring-white/20 transition hover:bg-white/20"
+            >
+              {t("nav.about", locale)}
+            </Link>
+            <Link
+              href="/club/ray-mac-stadium"
+              className="sfc-display rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white ring-1 ring-white/20 transition hover:bg-white/20"
+            >
+              {t("nav.ray-mac", locale)}
+            </Link>
+            <Link
+              href="/club/hospitality"
+              className="sfc-display rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white ring-1 ring-white/20 transition hover:bg-white/20"
+            >
+              {t("nav.hospitality", locale)}
+            </Link>
+          </nav>
         </div>
       </div>
 
