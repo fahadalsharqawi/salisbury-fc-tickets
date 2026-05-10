@@ -246,9 +246,13 @@ const en: Dict = {
   "pay.apple-note":
     "You'll authenticate with Touch ID / Face ID on your device.",
   "pay.google-note": "Sign in to your Google account to confirm.",
+  "pay.tap-note":
+    "You'll be redirected to our secure payment provider to choose card, KNET, Apple Pay or Google Pay.",
+  "pay.button.continue": "Continue to payment · {amount}",
   "pay.button.card": "Pay {amount} with card",
   "pay.button.apple-pay": "Pay · {amount}",
   "pay.button.google-pay": "Pay · {amount}",
+  "pay.pending.continue": "Redirecting to payment…",
   "pay.pending.card": "Processing payment…",
   "pay.pending.apple": "Authorising on device…",
   "pay.pending.google": "Confirming with Google…",
@@ -258,6 +262,9 @@ const en: Dict = {
   // confirmation
   "confirm.title": "Payment complete",
   "confirm.subtitle": "Confirmation sent to {email}.",
+  "confirm.pending.title": "Finishing your payment…",
+  "confirm.pending.subtitle":
+    "We're waiting on confirmation from the payment provider. This usually takes a few seconds — refresh the page if it doesn't update.",
   "confirm.reference": "Reference",
   "confirm.booked-under": "Booked under",
   "confirm.mobile-ticket": "Mobile ticket",
@@ -551,9 +558,13 @@ const ar: Dict = {
   "pay.apple-note":
     "ستقوم بالمصادقة عبر بصمة الإصبع أو Face ID على جهازك.",
   "pay.google-note": "سجّل الدخول إلى حسابك في Google للتأكيد.",
+  "pay.tap-note":
+    "سيتم تحويلك إلى مزود الدفع الآمن لاختيار البطاقة أو KNET أو Apple Pay أو Google Pay.",
+  "pay.button.continue": "متابعة الدفع · {amount}",
   "pay.button.card": "ادفع {amount} ببطاقة",
   "pay.button.apple-pay": "ادفع · {amount}",
   "pay.button.google-pay": "ادفع · {amount}",
+  "pay.pending.continue": "جارٍ التحويل إلى الدفع…",
   "pay.pending.card": "جارٍ معالجة الدفع…",
   "pay.pending.apple": "جارٍ التفويض على الجهاز…",
   "pay.pending.google": "جارٍ التأكيد عبر Google…",
@@ -563,6 +574,9 @@ const ar: Dict = {
   // confirmation
   "confirm.title": "تم الدفع بنجاح",
   "confirm.subtitle": "تم إرسال التأكيد إلى {email}.",
+  "confirm.pending.title": "جارٍ إكمال الدفع…",
+  "confirm.pending.subtitle":
+    "بانتظار تأكيد مزود الدفع. عادةً ما يستغرق ذلك بضع ثوانٍ — قم بتحديث الصفحة إذا لم تتغير.",
   "confirm.reference": "المرجع",
   "confirm.booked-under": "محجوز باسم",
   "confirm.mobile-ticket": "تذكرة الجوال",
