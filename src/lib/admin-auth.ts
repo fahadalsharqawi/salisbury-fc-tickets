@@ -77,81 +77,46 @@ export async function requireSuperAdmin(): Promise<AdminUser> {
 
 export async function adminSignInAction(formData: FormData) {
   "use server";
-  let stage = "start";
-  try {
-    const username = String(formData.get("username") ?? "").trim().toLowerCase();
-    const password = String(formData.get("password") ?? "");
+  const username = String(formData.get("username") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
 
-    if (!username || !password) {
-      redirect("/admin/sign-in?error=" + encodeURIComponent("Username and password are required."));
-    }
-
-    stage = "db-lookup";
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "(missing)";
-    const srk = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-    const supabase = createAdminClient();
-    const { data: row, error: dbErr } = await supabase
-      .from("admin_users")
-      .select("id, username, password_hash, name, role")
-      .ilike("username", username)
-      .maybeSingle();
-
-    if (dbErr) {
-      // Hit the same endpoint directly to compare behaviour.
-      let directStatus = -1;
-      let directBody = "";
-      try {
-        const r = await fetch(`${supabaseUrl}/rest/v1/admin_users?select=username&username=ilike.${encodeURIComponent(username)}`, {
-          headers: { apikey: srk, Authorization: `Bearer ${srk}` },
-          cache: "no-store",
-        });
-        directStatus = r.status;
-        directBody = (await r.text()).slice(0, 120);
-      } catch (e) {
-        directBody = `fetch-threw: ${e instanceof Error ? e.message : String(e)}`.slice(0, 120);
-      }
-      const host = supabaseUrl.replace(/^https?:\/\//, "").split("/")[0];
-      redirect("/admin/sign-in?error=" + encodeURIComponent(`[db] ${dbErr.message} | host=${host} srkLen=${srk.length} direct=${directStatus}:${directBody}`.slice(0, 400)));
-    }
-
-    stage = "bcrypt";
-    if (!row) {
-      redirect("/admin/sign-in?error=" + encodeURIComponent(`[no-row] username=${username}`));
-    }
-    const ok = await bcrypt.compare(password, row.password_hash);
-
-    if (!ok) {
-      redirect("/admin/sign-in?error=" + encodeURIComponent(`[bad-pw] hashLen=${row.password_hash.length} hashPrefix=${row.password_hash.slice(0, 7)} pwLen=${password.length}`));
-    }
-
-    stage = "update";
-    await supabase.from("admin_users").update({ last_login_at: new Date().toISOString() }).eq("id", row.id);
-
-    stage = "jwt-sign";
-    const token = await signSessionToken({
-      id: row.id,
-      username: row.username,
-      name: row.name,
-      role: row.role as AdminRole,
-    });
-
-    stage = "cookie";
-    (await cookies()).set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
-    });
-
-    redirect("/admin");
-  } catch (e) {
-    if (e && typeof e === "object" && "digest" in e && typeof (e as { digest: unknown }).digest === "string" && ((e as { digest: string }).digest.startsWith("NEXT_REDIRECT") || (e as { digest: string }).digest.startsWith("NEXT_NOT_FOUND"))) {
-      throw e;
-    }
-    const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-    redirect("/admin/sign-in?error=" + encodeURIComponent(`[${stage}] ${msg}`.slice(0, 400)));
+  if (!username || !password) {
+    redirect("/admin/sign-in?error=" + encodeURIComponent("Username and password are required."));
   }
+
+  const supabase = createAdminClient();
+  const { data: row } = await supabase
+    .from("admin_users")
+    .select("id, username, password_hash, name, role")
+    .ilike("username", username)
+    .maybeSingle();
+
+  // Run bcrypt either way to avoid timing-leaking whether the username exists.
+  const hash = row?.password_hash ?? "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalida";
+  const ok = await bcrypt.compare(password, hash);
+
+  if (!row || !ok) {
+    redirect("/admin/sign-in?error=" + encodeURIComponent("Invalid username or password."));
+  }
+
+  await supabase.from("admin_users").update({ last_login_at: new Date().toISOString() }).eq("id", row.id);
+
+  const token = await signSessionToken({
+    id: row.id,
+    username: row.username,
+    name: row.name,
+    role: row.role as AdminRole,
+  });
+
+  (await cookies()).set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
+  });
+
+  redirect("/admin");
 }
 
 export async function adminSignOutAction() {
