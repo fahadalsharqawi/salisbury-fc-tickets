@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { reseedDemoBookingsAction } from "@/lib/actions";
+import { requireAdmin } from "@/lib/admin-auth";
 import { getCurrency } from "@/lib/currency-server";
 import { getStats, listBookings, listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
@@ -16,6 +17,7 @@ export default async function AdminDashboardPage({
 }: {
   searchParams: SearchParams;
 }) {
+  await requireAdmin();
   const sp = await searchParams;
   const currency = await getCurrency();
   const locale = await getLocale();

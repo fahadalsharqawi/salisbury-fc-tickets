@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin-auth";
 import { listBookings, listMatches } from "@/lib/db";
 import { formatKickoff } from "@/lib/format";
 import { localize, t, type Locale } from "@/lib/i18n";
@@ -20,6 +21,7 @@ export default async function AdminBookingsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  await requireAdmin();
   const { status, q } = await searchParams;
   const locale = await getLocale();
   // Push filters into the DB query rather than fetching every row and

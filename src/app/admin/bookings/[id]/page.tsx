@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cancelBookingAction, markAttendedAction } from "@/lib/actions";
+import { requireAdmin } from "@/lib/admin-auth";
 import { getCurrency } from "@/lib/currency-server";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
@@ -18,6 +19,7 @@ export default async function AdminBookingDetail({
 }: {
   params: Promise<Params>;
 }) {
+  await requireAdmin();
   const { id } = await params;
   const currency = await getCurrency();
   const locale = await getLocale();
