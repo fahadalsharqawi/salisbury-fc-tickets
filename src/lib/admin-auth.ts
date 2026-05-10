@@ -87,6 +87,8 @@ export async function adminSignInAction(formData: FormData) {
     }
 
     stage = "db-lookup";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "(missing)";
+    const srk = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
     const supabase = createAdminClient();
     const { data: row, error: dbErr } = await supabase
       .from("admin_users")
@@ -95,7 +97,21 @@ export async function adminSignInAction(formData: FormData) {
       .maybeSingle();
 
     if (dbErr) {
-      redirect("/admin/sign-in?error=" + encodeURIComponent(`[db] ${dbErr.message}`.slice(0, 400)));
+      // Hit the same endpoint directly to compare behaviour.
+      let directStatus = -1;
+      let directBody = "";
+      try {
+        const r = await fetch(`${supabaseUrl}/rest/v1/admin_users?select=username&username=ilike.${encodeURIComponent(username)}`, {
+          headers: { apikey: srk, Authorization: `Bearer ${srk}` },
+          cache: "no-store",
+        });
+        directStatus = r.status;
+        directBody = (await r.text()).slice(0, 120);
+      } catch (e) {
+        directBody = `fetch-threw: ${e instanceof Error ? e.message : String(e)}`.slice(0, 120);
+      }
+      const host = supabaseUrl.replace(/^https?:\/\//, "").split("/")[0];
+      redirect("/admin/sign-in?error=" + encodeURIComponent(`[db] ${dbErr.message} | host=${host} srkLen=${srk.length} direct=${directStatus}:${directBody}`.slice(0, 400)));
     }
 
     stage = "bcrypt";
