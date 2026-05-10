@@ -24,6 +24,10 @@ import type { MatchWithAvailability, PaymentMethod } from "@/lib/types";
 const SEAT_GAP = 3;
 const BLOCK_GAP = 6; // gap between adjacent blocks on the same side
 const STAND_PADDING = 6;
+// Vertical room reserved above north blocks / below south blocks for their
+// outside labels (NE / X / Y / SE / NW / A–H / SW). Sized so the 9px label
+// + py-1 padding fit even after iOS Safari's minimum-font-size kicks in.
+const LABEL_ROW_H = 18;
 
 // Width of a row of `n` seats (px), including the gaps between them.
 function unit(n: number): number {
@@ -56,8 +60,10 @@ const NORTH_W = sideAcross(NORTH);
 const SOUTH_W = sideAcross(SOUTH);
 const PITCH_W = Math.max(NORTH_W, SOUTH_W);
 const PITCH_H = unit(WEST[0]?.length ?? 26) + STAND_PADDING * 2;
-const NORTH_H = sideDepth(NORTH);
-const SOUTH_H = sideDepth(SOUTH);
+// Outside labels live above north blocks / below south blocks, so each
+// strip needs room for them on top of the seat rows.
+const NORTH_H = sideDepth(NORTH) + LABEL_ROW_H;
+const SOUTH_H = sideDepth(SOUTH) + LABEL_ROW_H;
 const WEST_W = sideDepth(WEST);
 const EAST_W = sideDepth(EAST);
 
@@ -462,7 +468,7 @@ function Block({
     ? "relative rounded-md bg-stone-200 shadow-[inset_0_2px_0_rgba(0,0,0,0.08)] ring-1 ring-stone-300"
     : "relative rounded-md bg-white/65 ring-1 ring-stone-200";
 
-  return (
+  const frame = (
     <div className={frameClass} style={{ padding: STAND_PADDING }}>
       {block.isSeated && (
         <div
@@ -470,7 +476,7 @@ function Block({
           className="pointer-events-none absolute inset-x-1 top-0 h-1 rounded-t-md bg-sfc-navy/85"
         />
       )}
-      <BlockLabel block={block} side={side} />
+      {!horizontal && <BlockLabel block={block} side={side} />}
       <div
         className={
           horizontal
@@ -503,6 +509,34 @@ function Block({
         ))}
       </div>
     </div>
+  );
+
+  // For north/south, render the label as a sibling row above (north) or
+  // below (south) the seat frame so it always has its own dedicated space
+  // and never overlaps seats — even when the bowl is CSS-zoomed on phones.
+  if (horizontal) {
+    return (
+      <div className="flex flex-col items-stretch">
+        {side === "north" && <OutsideLabel block={block} />}
+        {frame}
+        {side === "south" && <OutsideLabel block={block} />}
+      </div>
+    );
+  }
+  return frame;
+}
+
+// Sibling-row label for north/south sides — sits above (north) or below
+// (south) the seat frame in its own row, never inside the seat strip.
+function OutsideLabel({ block }: { block: BlockConfig }) {
+  return (
+    <span
+      className={`block text-center text-[9px] font-bold uppercase tracking-[0.16em] leading-[1] py-1 ${
+        block.isSeated ? "text-sfc-navy" : "text-stone-500"
+      }`}
+    >
+      {block.short ?? block.name}
+    </span>
   );
 }
 
