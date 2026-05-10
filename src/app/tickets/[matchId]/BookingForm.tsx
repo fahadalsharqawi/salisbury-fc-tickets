@@ -70,11 +70,14 @@ const EAST_W = sideDepth(EAST);
 const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
 // Allow shrinking down to 0.35 — at 24px base × 0.35 = ~8px seats, tight
 // but tappable on a high-DPI phone. Below this we let the bowl overflow.
-const MIN_BOWL_SCALE = 0.35;
+// Don't lock the bowl to 0.35× — on phones with 360–390 px viewports the
+// bowl was ~916 px wide and needed horizontal scroll to see all blocks.
+// Allow it to scale further down so the whole stadium fits.
+const MIN_BOWL_SCALE = 0.22;
 // On phone-width viewports we deliberately render the bowl narrower than
 // the container so the pitch doesn't dominate. Below this width is "phone".
 const MOBILE_BREAKPOINT = 640;
-const MOBILE_BOWL_FRACTION = 0.7;
+const MOBILE_BOWL_FRACTION = 0.95;
 
 type Props = {
   match: MatchWithAvailability;
@@ -401,7 +404,9 @@ function Bowl({
 }
 
 function Corner() {
-  return <div className="rounded-md bg-stone-200/50" />;
+  // Empty bowl corners — kept as a grid placeholder so the layout still
+  // reserves space, but with no fill so the page background reads through.
+  return <div aria-hidden />;
 }
 
 type SeatGridProps = {

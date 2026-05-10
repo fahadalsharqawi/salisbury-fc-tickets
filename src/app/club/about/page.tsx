@@ -135,6 +135,54 @@ export default async function ClubAboutPage() {
           </aside>
         </section>
 
+        {/* Sections grid — links to every club sub-page */}
+        <section className="mt-12">
+          <h2 className="sfc-display anim-fade-up text-2xl font-bold">
+            Club sections
+          </h2>
+          <MotionStagger
+            as="ul"
+            className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            stagger={0.04}
+          >
+            {[
+              { href: "/club/history", title: "Club history", body: "1947 to today — a short history of the Whites." },
+              { href: "/club/officials", title: "Club officials", body: "Board, directors and operational officials." },
+              { href: "/club/ray-mac-stadium", title: "Raymond McEnhill Stadium", body: "The Ray Mac — capacity, address, history." },
+              { href: "/club/hospitality", title: "Hospitality", body: "Board-room and VIP-box packages on matchday." },
+              { href: "/club/founder-members", title: "Founder Members", body: "Supporters who funded the 2015 re-formation." },
+              { href: "/club/armed-forces-covenant", title: "Armed Forces Covenant", body: "Our pledge to serving personnel, veterans and families." },
+              { href: "/club/spectators-code-of-conduct", title: "Spectators' Code of Conduct", body: "Keeping the Ray Mac welcoming — please read." },
+              { href: "/club/easyfundraising", title: "easyfundraising", body: "Free donations to the club every time you shop online." },
+              { href: "/club/policies", title: "Policies & documentation", body: "Safeguarding, equality, ground regs, data protection." },
+              { href: "/contact", title: "Contact us", body: "Office hours, address, phone, email and message form." },
+            ].map((s) => (
+              <MotionItem
+                as="li"
+                key={s.href}
+                whileHover={{
+                  y: -2,
+                  boxShadow: "0 12px 28px -14px rgba(12,22,54,0.22)",
+                }}
+                transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                className="rounded-2xl border border-sfc-n-200 bg-white"
+              >
+                <Link href={s.href} className="block p-5">
+                  <div className="sfc-display text-[16px] font-bold leading-tight text-sfc-ink">
+                    {s.title}
+                  </div>
+                  <p className="mt-2 text-[13px] leading-relaxed text-sfc-n-700">
+                    {s.body}
+                  </p>
+                  <div className="sfc-display mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-sfc-navy">
+                    Open →
+                  </div>
+                </Link>
+              </MotionItem>
+            ))}
+          </MotionStagger>
+        </section>
+
         {/* Honours */}
         <section className="mt-12">
           <h2 className="sfc-display anim-fade-up text-2xl font-bold">
