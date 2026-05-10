@@ -9,6 +9,12 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = { status?: string; q?: string };
 
+const PAGE_LIMIT = 200;
+
+function asStatus(s: string | undefined): BookingStatus | undefined {
+  return s === "confirmed" || s === "attended" || s === "cancelled" ? s : undefined;
+}
+
 export default async function AdminBookingsPage({
   searchParams,
 }: {
@@ -16,22 +22,18 @@ export default async function AdminBookingsPage({
 }) {
   const { status, q } = await searchParams;
   const locale = await getLocale();
-  const [bookings, matches] = await Promise.all([listBookings(), listMatches()]);
+  // Push filters into the DB query rather than fetching every row and
+  // filtering in JS — on a busy season the bookings table can have
+  // thousands of rows and the admin page was noticeably slow.
+  const [filtered, matches] = await Promise.all([
+    listBookings({
+      status: asStatus(status),
+      search: q,
+      limit: PAGE_LIMIT,
+    }),
+    listMatches(),
+  ]);
   const matchMap = new Map<string, Match>(matches.map((m) => [m.id, m]));
-
-  const filtered = bookings.filter((b) => {
-    if (status && status !== "all" && b.status !== status) return false;
-    if (q) {
-      const needle = q.toLowerCase();
-      if (
-        !b.customerName.toLowerCase().includes(needle) &&
-        !b.email.toLowerCase().includes(needle)
-      ) {
-        return false;
-      }
-    }
-    return true;
-  });
 
   return (
     <div className="space-y-6">
@@ -39,10 +41,9 @@ export default async function AdminBookingsPage({
         <div>
           <h2 className="text-xl font-semibold">{t("admin.bookings-title", locale)}</h2>
           <p className="text-sm text-stone-500">
-            {t("admin.of-bookings", locale, {
-              n: filtered.length,
-              total: bookings.length,
-            })}
+            {filtered.length === PAGE_LIMIT
+              ? `Showing the most recent ${PAGE_LIMIT} bookings — refine filters to narrow.`
+              : `${filtered.length} booking${filtered.length === 1 ? "" : "s"}`}
           </p>
         </div>
         <form action="/admin/bookings" method="get" className="flex flex-wrap items-center gap-2">
