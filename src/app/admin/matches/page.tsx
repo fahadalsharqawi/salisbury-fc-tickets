@@ -1,4 +1,5 @@
 import { cancelMatchAction, createMatchAction } from "@/lib/actions";
+import { requireAdmin } from "@/lib/admin-auth";
 import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
 import { dateInput, formatKickoff, formatMoney, timeInput } from "@/lib/format";
@@ -14,6 +15,7 @@ export default async function AdminMatchesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  await requireAdmin();
   const { error, ok } = await searchParams;
   const currency = await getCurrency();
   const locale = await getLocale();
