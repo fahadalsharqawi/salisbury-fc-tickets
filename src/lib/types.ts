@@ -11,7 +11,7 @@ export type Match = {
   cancellationReason?: string;
 };
 
-export type BookingStatus = "confirmed" | "cancelled" | "attended";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "attended";
 
 export type CancelledBy = "customer" | "owner" | "match";
 
@@ -36,6 +36,8 @@ export type Booking = {
   cancelledBy?: CancelledBy;
   attendedAt?: string;
   createdAt: string;
+  tapChargeId?: string;
+  confirmedAt?: string;
 };
 
 export type MatchWithAvailability = Match & {

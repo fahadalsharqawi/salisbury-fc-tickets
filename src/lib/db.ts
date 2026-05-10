@@ -45,7 +45,16 @@ type BookingRow = {
   cancelled_by: CancelledBy | null;
   attended_at: string | null;
   created_at: string;
+  tap_charge_id: string | null;
+  confirmed_at: string | null;
 };
+
+// How long a pending booking holds its seats while the customer is on
+// Tap's payment page. Past this, the seats are considered released — even
+// if we never got a webhook (e.g. customer closed the tab and Tap never
+// fired). The webhook + return route will still tidy up the row state
+// when they eventually arrive.
+export const PENDING_HOLD_MINUTES = 15;
 
 function rowToMatch(r: MatchRow): Match {
   return {
@@ -82,17 +91,37 @@ function rowToBooking(r: BookingRow): Booking {
     cancelledBy: r.cancelled_by ?? undefined,
     attendedAt: r.attended_at ?? undefined,
     createdAt: r.created_at,
+    tapChargeId: r.tap_charge_id ?? undefined,
+    confirmedAt: r.confirmed_at ?? undefined,
   };
 }
 
+// A pending booking holds seats only as long as we still expect the customer
+// to come back from Tap. After PENDING_HOLD_MINUTES the seats are released
+// for other customers to grab, even if the row hasn't yet been transitioned
+// to 'cancelled'.
+function pendingHoldCutoffISO(): string {
+  return new Date(Date.now() - PENDING_HOLD_MINUTES * 60 * 1000).toISOString();
+}
+
 async function bookedSeatsForMatch(matchId: string): Promise<string[]> {
+  // Pulled from `bookings` rather than `booking_seats` so we can ignore
+  // pending holds that have aged out (customer abandoned the Tap page) and
+  // free those seats for other customers.
   const supabase = createAdminClient();
+  const cutoff = pendingHoldCutoffISO();
   const { data, error } = await supabase
-    .from("booking_seats")
-    .select("seat_id")
-    .eq("match_id", matchId);
+    .from("bookings")
+    .select("seats, status, created_at")
+    .eq("match_id", matchId)
+    .neq("status", "cancelled");
   if (error) throw new Error(error.message);
-  return (data ?? []).map((r) => r.seat_id);
+  const seats: string[] = [];
+  for (const row of data ?? []) {
+    if (row.status === "pending" && row.created_at < cutoff) continue;
+    for (const s of row.seats ?? []) seats.push(s);
+  }
+  return seats;
 }
 
 function withAvailability(match: Match, booked: string[]): MatchWithAvailability {
@@ -134,13 +163,15 @@ async function listMatchesImpl(
   // can blow past Supabase's default 1000-row page when the stadium is busy.
   const { data: bookings, error } = await supabase
     .from("bookings")
-    .select("match_id, seats")
+    .select("match_id, seats, status, created_at")
     .neq("status", "cancelled")
     .range(0, 99999);
   if (error) throw new Error(error.message);
 
+  const cutoff = pendingHoldCutoffISO();
   const bookedByMatch = new Map<string, string[]>();
   for (const b of bookings ?? []) {
+    if (b.status === "pending" && b.created_at < cutoff) continue;
     const list = bookedByMatch.get(b.match_id) ?? [];
     for (const seat of b.seats ?? []) list.push(seat);
     bookedByMatch.set(b.match_id, list);
@@ -306,6 +337,38 @@ export async function cancelBooking(
   return { ok: true, booking: rowToBooking(data as BookingRow) };
 }
 
+// Flip a pending booking to confirmed once Tap captures the charge. Safe
+// to call multiple times — the underlying RPC is idempotent so the webhook
+// and the redirect-back route can both call it without stepping on each
+// other.
+export async function confirmBookingPayment(
+  id: string,
+  chargeId: string,
+  paymentMethod: PaymentMethod,
+): Promise<{ ok: true; booking: Booking } | { ok: false; error: string }> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("confirm_booking_payment", {
+    p_booking_id: id,
+    p_charge_id: chargeId,
+    p_payment_method: paymentMethod,
+  });
+  if (error) return { ok: false, error: humaniseDbError(error.message) };
+  return { ok: true, booking: rowToBooking(data as BookingRow) };
+}
+
+// Cancel a pending booking and release its seats. Used when Tap reports a
+// failed/cancelled charge or when the customer abandoned the payment page.
+export async function expirePendingBooking(
+  id: string,
+): Promise<{ ok: true; booking: Booking } | { ok: false; error: string }> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("expire_pending_booking", {
+    p_booking_id: id,
+  });
+  if (error) return { ok: false, error: humaniseDbError(error.message) };
+  return { ok: true, booking: rowToBooking(data as BookingRow) };
+}
+
 export async function markBookingAttended(
   id: string,
 ): Promise<{ ok: true; booking: Booking } | { ok: false; error: string }> {
@@ -405,9 +468,14 @@ export async function getStats(): Promise<{
     withAvailability(m, bookedByMatch.get(m.id) ?? []),
   );
 
+  // Only paid bookings count towards real metrics — pending holds don't
+  // represent revenue or attendance until the charge captures.
+  const paid = bookings.filter(
+    (b) => b.status === "confirmed" || b.status === "attended",
+  );
   const active = bookings.filter((b) => b.status !== "cancelled");
-  const ticketsSold = active.reduce((sum, b) => sum + b.seats.length, 0);
-  const revenue = active.reduce((sum, b) => {
+  const ticketsSold = paid.reduce((sum, b) => sum + b.seats.length, 0);
+  const revenue = paid.reduce((sum, b) => {
     const match = matchById.get(b.matchId);
     if (!match) return sum;
     return (

@@ -68,6 +68,7 @@ const WEST_W = sideDepth(WEST);
 const EAST_W = sideDepth(EAST);
 
 const TOTAL_BOWL_WIDTH = WEST_W + PITCH_W + EAST_W + STAND_PADDING * 2;
+const TOTAL_BOWL_HEIGHT = NORTH_H + PITCH_H + SOUTH_H + STAND_PADDING * 2;
 // Allow shrinking down to 0.35 — at 24px base × 0.35 = ~8px seats, tight
 // but tappable on a high-DPI phone. Below this we let the bowl overflow.
 // Don't lock the bowl to 0.35× — on phones with 360–390 px viewports the
@@ -135,20 +136,24 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
   }, [selected, storageKey]);
 
   // Auto-fit the bowl. On phone viewports we target a fraction of the
-  // container width so the pitch + stands stay compact.
+  // container width so the pitch + stands stay compact. We use
+  // transform: scale (with a properly-sized wrapper) rather than CSS
+  // `zoom` because Safari's `zoom` doesn't shrink the element's layout
+  // box, so the parent ended up scrolling horizontally even when the
+  // bowl visually fit.
   const bowlContainerRef = useRef<HTMLDivElement>(null);
-  const [bowlZoom, setBowlZoom] = useState<number | null>(null);
+  const [bowlScale, setBowlScale] = useState<number>(1);
   useEffect(() => {
     const el = bowlContainerRef.current;
     if (!el) return;
     const update = () => {
       const w = el.clientWidth;
       const isPhone = w < MOBILE_BREAKPOINT;
-      const target = isPhone ? w * MOBILE_BOWL_FRACTION : w;
+      const target = isPhone ? w * MOBILE_BOWL_FRACTION : Math.min(w, TOTAL_BOWL_WIDTH);
       if (target >= TOTAL_BOWL_WIDTH) {
-        setBowlZoom(1);
+        setBowlScale(1);
       } else {
-        setBowlZoom(Math.max(MIN_BOWL_SCALE, target / TOTAL_BOWL_WIDTH));
+        setBowlScale(Math.max(MIN_BOWL_SCALE, target / TOTAL_BOWL_WIDTH));
       }
     };
     update();
@@ -241,19 +246,26 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
           locale={locale}
         />
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-2 sm:p-6">
-          <div
-            ref={bowlContainerRef}
-            className="-mx-2 flex justify-center overflow-x-auto px-2 sm:mx-0 sm:px-0"
-          >
-            {/* Bowl renders at TOTAL_BOWL_WIDTH; zoom (computed above)
-                shrinks it. On phones the target is ~70% of container width
-                so the bowl + pitch sit centered with breathing room and
-                don't dominate vertical space. */}
+          <div ref={bowlContainerRef} className="flex justify-center overflow-hidden">
+            {/* Visible layout box — sized to the scaled bowl so the parent
+                doesn't think the content is wider than it is. */}
             <div
-              className="[zoom:0.5] sm:[zoom:1]"
-              style={bowlZoom != null ? { zoom: bowlZoom } : undefined}
+              style={{
+                width: TOTAL_BOWL_WIDTH * bowlScale,
+                height: TOTAL_BOWL_HEIGHT * bowlScale,
+              }}
             >
-              <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
+              {/* Natural-size bowl, scaled into the visible box. */}
+              <div
+                style={{
+                  width: TOTAL_BOWL_WIDTH,
+                  height: TOTAL_BOWL_HEIGHT,
+                  transform: `scale(${bowlScale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                <Bowl booked={booked} selected={selected} toggle={toggle} locale={locale} />
+              </div>
             </div>
           </div>
           <Legend currency={currency} locale={locale} />
