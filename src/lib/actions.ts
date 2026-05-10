@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
@@ -8,14 +8,19 @@ import {
   cancelMatch,
   createBooking,
   createMatch,
+  expirePendingBooking,
   markBookingAttended,
   updateMatch,
 } from "./db";
+import { getMatch } from "./db";
+import { calcTotal } from "./pricing";
 import { allSeatIds } from "./seats";
 import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
+import { createCharge } from "./tap";
 import type { CancelledBy, PaymentMethod } from "./types";
-import type { Currency } from "./format";
+import { CURRENCY_RATES, type Currency } from "./format";
+import { getCurrency as resolveCurrency } from "./currency-server";
 import type { Locale } from "./i18n";
 
 function str(v: FormDataEntryValue | null): string {
@@ -51,10 +56,6 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
   const concessionCount = Math.max(0, num(formData.get("concessionCount")));
   const under17Count = Math.max(0, num(formData.get("under17Count")));
   const under5Count = Math.max(0, num(formData.get("under5Count")));
-  const rawMethod = str(formData.get("paymentMethod"));
-  const paymentMethod: PaymentMethod = (
-    ["card", "apple", "google"].includes(rawMethod) ? rawMethod : "card"
-  ) as PaymentMethod;
 
   function fail(msg: string): never {
     redirect(`/tickets/${matchId}?error=${encodeURIComponent(msg)}`);
@@ -71,6 +72,22 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
     fail(`Ticket counts must add up to ${seats.length} (you've got ${totalCount}).`);
   }
 
+  // Compute total server-side from the database price — never trust the
+  // client. Reject if the match no longer exists or has been cancelled.
+  const match = await getMatch(matchId);
+  if (!match) fail("Match not found.");
+  if (match.cancelledAt) fail("This match has been cancelled.");
+
+  const baseTotalGBP = calcTotal({
+    basePerSeat: match.pricePerSeat,
+    counts: { adultCount, concessionCount, under17Count, under5Count },
+    seats,
+  });
+  if (baseTotalGBP <= 0) fail("Total must be greater than zero.");
+
+  const currency = await resolveCurrency();
+  const tapAmount = convertForTap(baseTotalGBP, currency);
+
   // Attach to logged-in user, if any.
   let userId: string | undefined;
   try {
@@ -82,6 +99,11 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
   } catch {
     // Anonymous booking is fine.
   }
+
+  // Default the payment method to "card" — Tap's hosted page picks the
+  // real method, and the webhook + return route update the column once
+  // the charge captures.
+  const paymentMethod: PaymentMethod = "card";
 
   const result = await createBooking({
     matchId,
@@ -102,12 +124,64 @@ export async function submitBookingAction(formData: FormData): Promise<void> {
     fail(result.error);
   }
 
+  const baseUrl = await getRequestBaseUrl();
+  const bookingId = result.booking.id;
+  let redirectTo: string;
+  try {
+    const charge = await createCharge({
+      amount: tapAmount,
+      currency,
+      description: `Salisbury FC vs ${match.opponent}`,
+      reference: bookingId,
+      customer: {
+        firstName: customerName.split(" ")[0] || customerName,
+        lastName: customerName.split(" ").slice(1).join(" ") || undefined,
+        email,
+      },
+      redirectUrl: `${baseUrl}/booking/${bookingId}/return`,
+      postUrl: `${baseUrl}/api/tap/webhook`,
+      metadata: { booking_id: bookingId, match_id: matchId },
+    });
+    if (!charge.transaction?.url) {
+      throw new Error("Tap response did not include a transaction URL");
+    }
+    redirectTo = charge.transaction.url;
+  } catch (err) {
+    // Free the seats we just held so the customer can retry without
+    // hitting "seats taken".
+    await expirePendingBooking(bookingId);
+    const msg =
+      err instanceof Error
+        ? err.message
+        : "Could not start the payment. Please try again.";
+    console.error("[tap] createCharge failed:", msg);
+    fail("Sorry — could not start the payment. Please try again.");
+  }
+
   revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/bookings");
   revalidatePath("/tickets");
   revalidatePath(`/tickets/${matchId}`);
-  redirect(`/booking/${result.booking.id}`);
+  redirect(redirectTo);
+}
+
+// Convert a GBP-denominated booking total into the customer's chosen
+// currency, rounded to that currency's standard decimal places. Mirrors
+// what `formatMoney` shows on the page so the user sees and pays the
+// same number.
+function convertForTap(totalGBP: number, currency: Currency): number {
+  const converted = totalGBP * CURRENCY_RATES[currency];
+  const decimals = currency === "KWD" ? 3 : 2;
+  return Number(converted.toFixed(decimals));
+}
+
+async function getRequestBaseUrl(): Promise<string> {
+  const h = await headers();
+  const host =
+    h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  const proto =
+    h.get("x-forwarded-proto") ||
+    (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
 }
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {

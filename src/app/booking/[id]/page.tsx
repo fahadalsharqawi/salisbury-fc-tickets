@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
+import { PendingAutoRefresh } from "./PendingAutoRefresh";
 import { cancelBookingAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency-server";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
@@ -31,6 +32,7 @@ export default async function ConfirmationPage({
   const total = match ? bookingTotal(booking, match) : 0;
   const tiers = match ? tierPrices(match.pricePerSeat) : null;
   const isCancelled = booking.status === "cancelled";
+  const isPending = booking.status === "pending";
 
   const qrPayload = JSON.stringify({
     ref: booking.id,
@@ -46,6 +48,7 @@ export default async function ConfirmationPage({
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
+      {isPending && <PendingAutoRefresh />}
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -74,6 +77,26 @@ export default async function ConfirmationPage({
                   : booking.cancelledBy === "owner"
                     ? "This booking was cancelled by the club. A refund has been issued."
                     : "You cancelled this booking. As stated, customer-initiated cancellations are non-refundable."}
+              </p>
+            </>
+          ) : isPending ? (
+            <>
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-stone-200">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-9 w-9 animate-spin text-stone-500"
+                  fill="none"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                  <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+                {t("confirm.pending.title", locale)}
+              </h1>
+              <p className="mt-2 text-stone-600">
+                {t("confirm.pending.subtitle", locale)}
               </p>
             </>
           ) : (
@@ -213,12 +236,14 @@ export default async function ConfirmationPage({
               <span className="text-lg font-semibold">{formatMoney(total, currency)}</span>
             )}
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm">
-            <span className="text-stone-600">{t("confirm.paid-with", locale)}</span>
-            <span className="font-medium text-stone-900">
-              {paymentLabel(booking.paymentMethod, locale)}
-            </span>
-          </div>
+          {!isPending && (
+            <div className="mt-2 flex items-center justify-between text-sm">
+              <span className="text-stone-600">{t("confirm.paid-with", locale)}</span>
+              <span className="font-medium text-stone-900">
+                {paymentLabel(booking.paymentMethod, locale)}
+              </span>
+            </div>
+          )}
           {booking.notes && (
             <div className="mt-4 rounded-lg bg-stone-50 p-3 text-sm text-stone-700">
               <Label>{t("common.notes", locale)}</Label>
@@ -240,7 +265,7 @@ export default async function ConfirmationPage({
         </Link>
       </div>
 
-      {!isCancelled && (
+      {!isCancelled && !isPending && (
         <form
           action={cancelBookingAction}
           className="anim-fade-up mt-6 flex flex-col items-center"

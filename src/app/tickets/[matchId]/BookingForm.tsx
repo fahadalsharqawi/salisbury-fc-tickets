@@ -19,7 +19,7 @@ import {
 import { formatMoney, type Currency } from "@/lib/format";
 import { t, type Locale } from "@/lib/i18n";
 import { calcTotal, tierPrices } from "@/lib/pricing";
-import type { MatchWithAvailability, PaymentMethod } from "@/lib/types";
+import type { MatchWithAvailability } from "@/lib/types";
 
 const SEAT_GAP = 3;
 const BLOCK_GAP = 6; // gap between adjacent blocks on the same side
@@ -91,7 +91,6 @@ type Props = {
 export default function BookingForm({ match, error, currency, locale, prefill }: Props) {
   const booked = useMemo(() => new Set(match.bookedSeats), [match.bookedSeats]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [payment, setPayment] = useState<PaymentMethod>("card");
 
   const [adultCount, setAdultCount] = useState(0);
   const [concessionCount, setConcessionCount] = useState(0);
@@ -227,17 +226,16 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
           // ignore
         }
       }}
-      className="grid gap-8 lg:grid-cols-[1fr_360px]"
+      className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]"
     >
       <input type="hidden" name="matchId" value={match.id} />
       <input type="hidden" name="seats" value={ordered.join(",")} />
-      <input type="hidden" name="paymentMethod" value={payment} />
       <input type="hidden" name="adultCount" value={adultCount} />
       <input type="hidden" name="concessionCount" value={concessionCount} />
       <input type="hidden" name="under17Count" value={under17Count} />
       <input type="hidden" name="under5Count" value={under5Count} />
 
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         <QuickPick
           onPick={quickPick}
           onClear={clearSelection}
@@ -340,26 +338,12 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
         </label>
 
         <div className="border-t border-stone-200 pt-5">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-              {t("pay.heading", locale)}
-            </h3>
-            <span className="text-xs text-stone-500">{t("common.demo-only", locale)}</span>
-          </div>
-
-          <PaymentTabs value={payment} onChange={setPayment} locale={locale} />
-
-          {payment === "card" && <CardFields locale={locale} />}
-          {payment !== "card" && (
-            <div className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">
-              {payment === "apple"
-                ? t("pay.apple-note", locale)
-                : t("pay.google-note", locale)}
-            </div>
-          )}
+          <p className="text-xs text-stone-500">
+            {t("pay.tap-note", locale)}
+          </p>
         </div>
 
-        <PayButton method={payment} total={total} disabled={!canPay} currency={currency} locale={locale} />
+        <PayButton total={total} disabled={!canPay} currency={currency} locale={locale} />
 
         <p className="text-xs text-stone-500">{t("form.no-reserve", locale)}</p>
       </aside>
@@ -1051,138 +1035,6 @@ function TierRow({
 
 // ---- payment ----
 
-function PaymentTabs({
-  value,
-  onChange,
-  locale,
-}: {
-  value: PaymentMethod;
-  onChange: (v: PaymentMethod) => void;
-  locale: Locale;
-}) {
-  const tabs: { id: PaymentMethod; label: string }[] = [
-    { id: "card", label: t("pay.tab.card", locale) },
-    { id: "apple", label: t("pay.tab.apple", locale) },
-    { id: "google", label: t("pay.tab.google", locale) },
-  ];
-  return (
-    <div className="relative mt-3 flex rounded-lg border border-stone-200 bg-stone-100 p-1 text-sm">
-      {tabs.map((tab) => {
-        const isActive = value === tab.id;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            aria-pressed={isActive}
-            className={`relative z-10 flex-1 rounded-md px-3 py-1.5 font-medium transition-colors duration-200 ${
-              isActive ? "text-stone-900" : "text-stone-600 hover:text-stone-900"
-            }`}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="payment-tab-indicator"
-                aria-hidden
-                className="absolute inset-0 z-[-1] rounded-md bg-white shadow-sm"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
-            {tab.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function CardFields({ locale }: { locale: Locale }) {
-  const [number, setNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const brand = detectBrand(number);
-
-  return (
-    <div className="mt-4 space-y-3">
-      <label className="block text-sm font-medium text-stone-700">
-        {t("pay.card-number", locale)}
-        <span className="relative mt-1.5 block">
-          <input
-            name="cardNumber"
-            value={number}
-            onChange={(e) => setNumber(formatCardNumber(e.target.value))}
-            placeholder="4242 4242 4242 4242"
-            inputMode="numeric"
-            autoComplete="cc-number"
-            maxLength={23}
-            dir="ltr"
-            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 pe-14 font-mono text-sm tracking-[0.05em] shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-          <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-[10px] font-semibold uppercase tracking-wide text-stone-500">
-            {brand}
-          </span>
-        </span>
-      </label>
-      <Field
-        label={t("pay.card-name", locale)}
-        name="cardName"
-        placeholder="J. SMITH"
-        autoComplete="cc-name"
-      />
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block text-sm font-medium text-stone-700">
-          {t("pay.card-expiry", locale)}
-          <input
-            name="cardExpiry"
-            value={expiry}
-            onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-            placeholder="MM/YY"
-            inputMode="numeric"
-            autoComplete="cc-exp"
-            maxLength={5}
-            dir="ltr"
-            className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </label>
-        <label className="block text-sm font-medium text-stone-700">
-          {t("pay.card-cvv", locale)}
-          <input
-            name="cardCvv"
-            value={cvv}
-            onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="123"
-            inputMode="numeric"
-            autoComplete="cc-csc"
-            dir="ltr"
-            className="mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-mono text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </label>
-      </div>
-      <p className="text-xs text-stone-500">{t("pay.demo-card-note", locale)}</p>
-    </div>
-  );
-}
-
-function formatCardNumber(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 19);
-  return digits.replace(/(.{4})/g, "$1 ").trim();
-}
-
-function formatExpiry(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-}
-
-function detectBrand(value: string): string {
-  const d = value.replace(/\D/g, "");
-  if (!d) return "";
-  if (/^4/.test(d)) return "Visa";
-  if (/^(5[1-5]|2[2-7])/.test(d)) return "Mastercard";
-  if (/^3[47]/.test(d)) return "Amex";
-  if (/^6/.test(d)) return "Discover";
-  return "";
-}
-
 function QuickPick({
   onPick,
   onClear,
@@ -1288,13 +1140,11 @@ function MobileCheckoutBar({
 }
 
 function PayButton({
-  method,
   total,
   disabled,
   currency,
   locale,
 }: {
-  method: PaymentMethod;
   total: number;
   disabled: boolean;
   currency: Currency;
@@ -1308,51 +1158,6 @@ function PayButton({
   const hover = isDisabled ? undefined : { scale: 1.01 };
   const spring = { type: "spring" as const, stiffness: 380, damping: 26 };
 
-  if (method === "apple") {
-    return (
-      <motion.button
-        type="submit"
-        disabled={isDisabled}
-        whileHover={hover}
-        whileTap={press}
-        transition={spring}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-base font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
-      >
-        {pending ? (
-          <PendingLabel text={t("pay.pending.apple", locale)} />
-        ) : (
-          <>
-            <ApplePayWordmark />
-            <span aria-hidden>· {amount}</span>
-            <span className="sr-only">
-              {t("pay.button.apple-pay", locale, { amount })}
-            </span>
-          </>
-        )}
-      </motion.button>
-    );
-  }
-  if (method === "google") {
-    return (
-      <motion.button
-        type="submit"
-        disabled={isDisabled}
-        whileHover={hover}
-        whileTap={press}
-        transition={spring}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-base font-semibold text-stone-900 ring-1 ring-stone-300 hover:bg-stone-50 hover:shadow-md disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
-      >
-        {pending ? (
-          <PendingLabel text={t("pay.pending.google", locale)} tone="dark" />
-        ) : (
-          <>
-            <GMark />
-            <span>{t("pay.button.google-pay", locale, { amount })}</span>
-          </>
-        )}
-      </motion.button>
-    );
-  }
   return (
     <motion.button
       type="submit"
@@ -1363,9 +1168,9 @@ function PayButton({
       className="sfc-btn sfc-btn--primary w-full disabled:cursor-not-allowed disabled:bg-sfc-n-300 disabled:shadow-none"
     >
       {pending ? (
-        <PendingLabel text={t("pay.pending.card", locale)} />
+        <PendingLabel text={t("pay.pending.continue", locale)} />
       ) : (
-        <span>{t("pay.button.card", locale, { amount })}</span>
+        <span>{t("pay.button.continue", locale, { amount })}</span>
       )}
     </motion.button>
   );
@@ -1402,52 +1207,6 @@ function Spinner({ tone }: { tone?: "dark" }) {
         stroke={stroke}
         strokeWidth="3"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-// Apple Pay wordmark — the apple glyph and "Pay" rendered as a single
-// tightly-kerned unit so the button reads exactly as the official logo.
-function ApplePayWordmark() {
-  return (
-    <span
-      aria-hidden
-      className="inline-flex items-center gap-1.5 leading-none"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[1.15em] w-[1.15em]"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M16.36 12.56c0-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.81 0-2.07-.92-3.4-.9-1.75.03-3.36 1.01-4.26 2.58-1.82 3.16-.46 7.83 1.3 10.4.86 1.25 1.88 2.66 3.21 2.62 1.29-.05 1.78-.84 3.34-.84s2 .84 3.37.81c1.39-.02 2.27-1.27 3.12-2.53.99-1.45 1.39-2.86 1.41-2.93-.03-.01-2.71-1.04-2.6-4.2zm-2.62-7.7c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.97-1.08 3.14 1.14.09 2.3-.58 3.01-1.43z" />
-      </svg>
-      <span className="font-semibold tracking-tight">Pay</span>
-    </span>
-  );
-}
-
-function GMark() {
-  // Google's four-colour "G" logo. Sits before the "Pay · {amount}" label
-  // so the full button reads "[G] Pay · £X.XX".
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path
-        fill="#4285F4"
-        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.44c-.28 1.46-1.12 2.7-2.38 3.53v2.93h3.84c2.25-2.07 3.55-5.13 3.55-8.7z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 24c3.24 0 5.95-1.08 7.93-2.93l-3.84-2.93c-1.07.72-2.43 1.16-4.09 1.16-3.14 0-5.8-2.12-6.75-4.97H1.29v3.12C3.26 21.3 7.31 24 12 24z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.25 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.55H1.29C.47 8.18 0 10.04 0 12s.47 3.82 1.29 5.45l3.96-3.12z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.41-3.41C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.55l3.96 3.12C6.2 6.89 8.86 4.77 12 4.77z"
       />
     </svg>
   );
