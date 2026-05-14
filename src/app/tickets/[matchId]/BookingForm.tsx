@@ -10,7 +10,6 @@ import {
   type BlockConfig,
   blocksOnSide,
   colsOf,
-  findAdjacentSeats,
   isMainStand,
   parseSeatId,
   rowsOf,
@@ -171,21 +170,6 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
     });
   }
 
-  function clearSelection() {
-    setSelected(new Set());
-  }
-
-  function quickPick(count: number) {
-    const taken = new Set([...booked, ...selected]);
-    const found = findAdjacentSeats(count, taken);
-    if (found.length === 0) return;
-    setSelected((prev) => {
-      const next = new Set(prev);
-      for (const id of found) next.add(id);
-      return next;
-    });
-  }
-
   // Auto-rebalance: when seat count changes, top up / draw down adults.
   useEffect(() => {
     const target = selected.size;
@@ -236,15 +220,15 @@ export default function BookingForm({ match, error, currency, locale, prefill }:
       <input type="hidden" name="under5Count" value={under5Count} />
 
       <div className="min-w-0 space-y-4">
-        <QuickPick
-          onPick={quickPick}
-          onClear={clearSelection}
-          selectedCount={selected.size}
-          remaining={match.remaining}
-          locale={locale}
-        />
         <div className="anim-scale-in rounded-2xl border border-stone-200 bg-stone-100 p-2 sm:p-6">
-          <div ref={bowlContainerRef} className="flex justify-center overflow-hidden">
+          {/* The bowl is a physical map (NE, NW, Main Stand, etc.) — its
+              left/right are cardinal, not language-dependent. Pin to LTR
+              so RTL pages don't mirror the scaled wrapper off-screen. */}
+          <div
+            ref={bowlContainerRef}
+            className="flex justify-center overflow-hidden"
+            dir="ltr"
+          >
             {/* Visible layout box — sized to the scaled bowl so the parent
                 doesn't think the content is wider than it is. */}
             <div
@@ -1034,57 +1018,6 @@ function TierRow({
 }
 
 // ---- payment ----
-
-function QuickPick({
-  onPick,
-  onClear,
-  selectedCount,
-  remaining,
-  locale,
-}: {
-  onPick: (n: number) => void;
-  onClear: () => void;
-  selectedCount: number;
-  remaining: number;
-  locale: Locale;
-}) {
-  const presets = [1, 2, 4, 6].filter((n) => n <= remaining);
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3">
-      <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-        {t("seats.quick-pick", locale)}
-      </span>
-      <div className="flex flex-wrap gap-1.5">
-        {presets.map((n) => (
-          <motion.button
-            key={n}
-            type="button"
-            onClick={() => onPick(n)}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="rounded-full border border-sfc-n-200 bg-sfc-bone px-3 py-1 text-xs font-semibold text-sfc-n-700 hover:border-sfc-navy hover:bg-white hover:text-sfc-navy"
-          >
-            {t("seats.together", locale, { n })}
-          </motion.button>
-        ))}
-      </div>
-      <span className="ms-auto text-xs text-stone-500">
-        {selectedCount > 0 ? (
-          <button
-            type="button"
-            onClick={onClear}
-            className="font-medium text-stone-700 hover:text-red-600 hover:underline"
-          >
-            {t("seats.clear", locale, { n: selectedCount })}
-          </button>
-        ) : (
-          <>{t("seats.or-individually", locale)}</>
-        )}
-      </span>
-    </div>
-  );
-}
 
 function MobileCheckoutBar({
   count,
