@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { PendingAutoRefresh } from "./PendingAutoRefresh";
+import { PaymentMethodLogo } from "@/components/PaymentMethodLogo";
 import { cancelBookingAction } from "@/lib/actions";
 import { getCurrency } from "@/lib/currency-server";
 import { bookingTotal, getBooking, getMatch } from "@/lib/db";
@@ -239,8 +240,19 @@ export default async function ConfirmationPage({
           {!isPending && (
             <div className="mt-2 flex items-center justify-between text-sm">
               <span className="text-stone-600">{t("confirm.paid-with", locale)}</span>
-              <span className="font-medium text-stone-900">
-                {paymentLabel(booking.paymentMethod, locale)}
+              <span className="flex items-center gap-2 font-medium text-stone-900">
+                <PaymentMethodLogo
+                  method={booking.paymentMethod}
+                  brand={booking.cardBrand}
+                  size={18}
+                  className="rounded-sm"
+                />
+                <span>{paymentLabel(booking.paymentMethod, locale)}</span>
+                {booking.cardLast4 && (
+                  <span className="font-mono text-stone-500" dir="ltr">
+                    •••• {booking.cardLast4}
+                  </span>
+                )}
               </span>
             </div>
           )}

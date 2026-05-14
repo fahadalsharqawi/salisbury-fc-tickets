@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MotionItem, MotionStagger } from "@/components/motion/Motion";
-import { LEAGUE, RESULTS, type LastResult } from "@/lib/club";
+import { LEAGUE, RESULTS, resultSlug, type LastResult } from "@/lib/club";
+import { TeamBadge } from "@/components/TeamBadge";
 import { localize, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale-server";
 
@@ -105,14 +106,19 @@ export default async function FirstTeamResultsPage() {
               <ul className="overflow-hidden rounded-2xl border border-sfc-n-200 bg-white divide-y divide-sfc-n-100">
                 {g.rows.map((r) => {
                   const bucket = resultBucket(r);
+                  const homeTeam =
+                    r.homeOrAway === "home" ? "Salisbury FC" : r.opponent;
+                  const awayTeam =
+                    r.homeOrAway === "home" ? r.opponent : "Salisbury FC";
                   const home =
                     r.homeOrAway === "home" ? t("brand.name", locale) : localize(r.opponent, locale);
                   const away =
                     r.homeOrAway === "home" ? localize(r.opponent, locale) : t("brand.name", locale);
                   const homeScore = r.homeOrAway === "home" ? r.scoreFor : r.scoreAgainst;
                   const awayScore = r.homeOrAway === "home" ? r.scoreAgainst : r.scoreFor;
+                  const slug = resultSlug(r);
                   return (
-                    <li key={r.date + r.opponent} className="flex items-center gap-4 px-5 py-4">
+                    <li key={r.date + r.opponent} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
                       <span
                         className={`sfc-form-chip sfc-form-chip--${bucket} h-8 w-8 text-[12px]`}
                       >
@@ -123,16 +129,18 @@ export default async function FirstTeamResultsPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm">
-                          <span className="truncate text-end font-semibold">
-                            {home}
+                          <span className="inline-flex items-center justify-end gap-2 truncate font-semibold">
+                            <span className="truncate text-end">{home}</span>
+                            <TeamBadge team={homeTeam} size="sm" />
                           </span>
                           <span className="font-mono text-base font-bold tracking-tight text-sfc-ink">
                             {homeScore}
                             <span className="px-1 text-sfc-n-300">–</span>
                             {awayScore}
                           </span>
-                          <span className="truncate font-semibold">
-                            {away}
+                          <span className="inline-flex items-center gap-2 truncate font-semibold">
+                            <TeamBadge team={awayTeam} size="sm" />
+                            <span className="truncate">{away}</span>
                           </span>
                         </div>
                         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 text-[11px] text-sfc-n-500 sm:hidden">
@@ -143,6 +151,21 @@ export default async function FirstTeamResultsPage() {
                       <span className="hidden max-w-[18ch] truncate text-end text-[12px] text-sfc-n-500 sm:block">
                         {localize(r.competition, locale)}
                       </span>
+                      <div className="flex shrink-0 items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.08em]">
+                        <Link
+                          href={`/matches/${slug}`}
+                          className="text-sfc-navy hover:underline hover:underline-offset-4"
+                        >
+                          {t("results.match-centre", locale)}
+                        </Link>
+                        <span aria-hidden className="text-sfc-n-300">·</span>
+                        <Link
+                          href={`/matches/${slug}/report`}
+                          className="text-sfc-navy hover:underline hover:underline-offset-4"
+                        >
+                          {t("results.report", locale)}
+                        </Link>
+                      </div>
                     </li>
                   );
                 })}

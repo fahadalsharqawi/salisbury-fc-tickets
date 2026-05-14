@@ -47,7 +47,12 @@ export type TapCharge = {
     payment_method?: string | null;
     type?: string | null;
   } | null;
-  card?: { brand?: string | null } | null;
+  card?: {
+    brand?: string | null;
+    scheme?: string | null;
+    last_four?: string | null;
+    last_4_digits?: string | null;
+  } | null;
   transaction?: { url?: string | null } | null;
   metadata?: Record<string, string> | null;
 };
@@ -210,4 +215,24 @@ export function mapPaymentMethod(charge: TapCharge): PaymentMethod {
   if (raw.includes("APPLE")) return "apple";
   if (raw.includes("GOOGLE")) return "google";
   return "card";
+}
+
+// Title-cased brand for display, e.g. "Visa" / "Mastercard". Tap reports
+// these in upper-case ("VISA"); we lower-case then capitalise the first
+// letter so they sit nicely next to the masked digits on the receipt.
+export function getCardBrand(charge: TapCharge): string | null {
+  const raw = (charge.card?.brand ?? charge.card?.scheme ?? "").toString().trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  if (lower === "mastercard") return "Mastercard";
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+export function getCardLast4(charge: TapCharge): string | null {
+  const raw = (
+    charge.card?.last_four ??
+    charge.card?.last_4_digits ??
+    ""
+  ).toString();
+  return /^\d{4}$/.test(raw) ? raw : null;
 }

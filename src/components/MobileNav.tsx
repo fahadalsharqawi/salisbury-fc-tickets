@@ -25,6 +25,7 @@ type Props = {
 // Primary destinations — large bold links at the top of the drawer.
 const PRIMARY = [
   { href: "/tickets", key: "nav.fixtures" },
+  { href: "/results/first-team", key: "nav.results" },
   { href: "/club", key: "nav.club" },
   { href: "/club/about", key: "nav.about" },
   { href: "/club/ray-mac-stadium", key: "nav.ray-mac" },

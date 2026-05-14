@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Noto_Sans_Arabic, Oswald } from "next/font/google";
+import localFont from "next/font/local";
 import Image from "next/image";
 import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
@@ -43,6 +44,47 @@ const notoArabic = Noto_Sans_Arabic({
   subsets: ["arabic"],
   variable: "--font-noto-arabic",
   weight: ["400", "500", "600", "700"],
+});
+
+// Thmanyah typeface (Arabic). Used in RTL mode only — Latin pages keep
+// Manrope/Inter. Three families, five weights each (300/400/500/700/900).
+//
+// `display: swap` so the Latin fallback paints first and the Arabic
+// glyphs get re-laid out without invisible-text flashes.
+const thmanyahSerifDisplay = localFont({
+  variable: "--font-thmanyah-serif-display",
+  display: "swap",
+  src: [
+    { path: "../fonts/thmanyah/thmanyahserifdisplay-Light.woff2",   weight: "300", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahserifdisplay-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahserifdisplay-Medium.woff2",  weight: "500", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahserifdisplay-Bold.woff2",    weight: "700", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahserifdisplay-Black.woff2",   weight: "900", style: "normal" },
+  ],
+});
+
+const thmanyahSerifText = localFont({
+  variable: "--font-thmanyah-serif-text",
+  display: "swap",
+  src: [
+    { path: "../fonts/thmanyah/thmanyahseriftext-Light.woff2",   weight: "300", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahseriftext-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahseriftext-Medium.woff2",  weight: "500", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahseriftext-Bold.woff2",    weight: "700", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahseriftext-Black.woff2",   weight: "900", style: "normal" },
+  ],
+});
+
+const thmanyahSans = localFont({
+  variable: "--font-thmanyah-sans",
+  display: "swap",
+  src: [
+    { path: "../fonts/thmanyah/thmanyahsans-Light.woff2",   weight: "300", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahsans-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahsans-Medium.woff2",  weight: "500", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahsans-Bold.woff2",    weight: "700", style: "normal" },
+    { path: "../fonts/thmanyah/thmanyahsans-Black.woff2",   weight: "900", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -103,7 +145,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={LOCALE_DIR[locale]}
-      className={`${inter.variable} ${oswald.variable} ${manrope.variable} ${notoArabic.variable} h-full antialiased`}
+      className={`${inter.variable} ${oswald.variable} ${manrope.variable} ${notoArabic.variable} ${thmanyahSerifDisplay.variable} ${thmanyahSerifText.variable} ${thmanyahSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-sfc-ink">
         <SitePreloader />
@@ -132,6 +174,7 @@ export default async function RootLayout({
 
             <nav className="hidden items-center gap-1 lg:flex lg:ms-6">
               <NavLink href="/tickets">{t("nav.fixtures", locale)}</NavLink>
+              <NavLink href="/results/first-team">{t("nav.results", locale)}</NavLink>
               <NavLink href="/club">{t("nav.club", locale)}</NavLink>
               <NavLink href="/news">{t("nav.news", locale)}</NavLink>
               <NavLink href="/contact">{t("nav.contact", locale)}</NavLink>

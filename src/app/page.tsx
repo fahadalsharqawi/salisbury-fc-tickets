@@ -11,6 +11,7 @@ import { MotionItem, MotionStagger } from "@/components/motion/Motion";
 import { NewsPoster } from "@/components/NewsPoster";
 import WordsReveal from "@/components/WordsReveal";
 import { LAST_RESULT, LEAGUE, NEWS, RESULTS, STANDINGS } from "@/lib/club";
+import { TeamBadge } from "@/components/TeamBadge";
 import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney } from "@/lib/format";
@@ -403,10 +404,7 @@ export default async function Home() {
                               }`}
                             >
                               <span className="inline-flex items-center gap-2.5">
-                                <span
-                                  aria-hidden
-                                  className="h-5 w-5 shrink-0 rounded-full bg-sfc-n-200"
-                                />
+                                <TeamBadge team={row.team} size="xs" />
                                 {localize(row.team, locale)}
                               </span>
                             </td>
@@ -443,13 +441,14 @@ export default async function Home() {
                 </div>
               </div>
               <ul className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-sfc-n-200 bg-white divide-y divide-sfc-n-100">
-                {RESULTS.map((r, i) => {
+                {RESULTS.slice(0, 5).map((r, i) => {
                   const result = r.scoreFor > r.scoreAgainst ? "W" : r.scoreFor < r.scoreAgainst ? "L" : "D";
                   return (
                     <li key={i} className="flex flex-1 items-center gap-3 px-5 py-4">
                       <span className={`sfc-form-chip sfc-form-chip--${result} h-9 w-9 text-[15px]`}>
                         {result}
                       </span>
+                      <TeamBadge team={r.opponent} size="sm" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
                           <span className="text-[12.5px] font-bold uppercase tracking-[0.06em] text-sfc-n-500">
@@ -474,7 +473,7 @@ export default async function Home() {
               </ul>
               <div className="mt-3 text-end">
                 <Link
-                  href="/club"
+                  href="/results/first-team"
                   className="text-sm font-semibold uppercase tracking-[0.14em] text-sfc-navy hover:underline hover:underline-offset-4"
                 >
                   {t("home.full-archive", locale)}
@@ -584,7 +583,6 @@ function FixtureCrests({
   isHome: boolean;
   locale: Locale;
 }) {
-  const initials = teamInitials(opponent);
   const home = (
     <div className="grid h-14 w-14 place-items-center rounded-full bg-white p-1 ring-2 ring-white/30 sm:h-16 sm:w-16">
       <Image
@@ -597,13 +595,8 @@ function FixtureCrests({
     </div>
   );
   const away = (
-    <div
-      className="grid h-14 w-14 place-items-center rounded-full bg-sfc-bone text-sfc-navy ring-2 ring-white/20 sm:h-16 sm:w-16"
-      title={opponent}
-    >
-      <span className="sfc-display text-base font-bold leading-none tracking-tight sm:text-lg">
-        {initials}
-      </span>
+    <div className="rounded-full ring-2 ring-white/20 sm:scale-110" title={opponent}>
+      <TeamBadge team={opponent} size="lg" />
     </div>
   );
 
