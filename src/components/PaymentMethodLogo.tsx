@@ -43,6 +43,38 @@ export function PaymentMethodLogo({
   return <GenericCard {...shared} />;
 }
 
+// Row of every payment mark we accept — used in the site footer so visitors
+// can see what's supported before they reach checkout.
+export function PaymentMethodsStrip({
+  size = 24,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  const marks = [
+    { key: "visa",        node: <Visa height={size} aria-hidden /> },
+    { key: "mastercard",  node: <Mastercard height={size} aria-hidden /> },
+    { key: "amex",        node: <Amex height={size} aria-hidden /> },
+    { key: "mada",        node: <Mada height={size} aria-hidden /> },
+    { key: "knet",        node: <Knet height={size} aria-hidden /> },
+    { key: "benefit",     node: <Benefit height={size} aria-hidden /> },
+    { key: "meeza",       node: <Meeza height={size} aria-hidden /> },
+    { key: "apple-pay",   node: <ApplePay height={size} aria-hidden /> },
+    { key: "google-pay",  node: <GooglePay height={size} aria-hidden /> },
+  ];
+  return (
+    <div
+      className={`flex flex-wrap items-center justify-center gap-3 ${className}`}
+      dir="ltr"
+    >
+      {marks.map((m) => (
+        <span key={m.key} className="inline-flex">{m.node}</span>
+      ))}
+    </div>
+  );
+}
+
 // ─── Wallet marks ────────────────────────────────────────────────────────
 
 function ApplePay(props: React.SVGProps<SVGSVGElement>) {

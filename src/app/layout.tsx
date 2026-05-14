@@ -6,6 +6,7 @@ import Link from "next/link";
 import { setCurrencyAction, setLocaleAction } from "@/lib/actions";
 import BrandLink from "@/components/BrandLink";
 import MobileNav from "@/components/MobileNav";
+import { PaymentMethodsStrip } from "@/components/PaymentMethodLogo";
 import ScrollProgress from "@/components/ScrollProgress";
 import ScrollReveal from "@/components/ScrollReveal";
 import SitePreloader from "@/components/SitePreloader";
@@ -264,6 +265,18 @@ export default async function RootLayout({
                   </a>
                 ))}
               </div>
+            </div>
+          </div>
+          {/* Payment methods we accept */}
+          <div className="border-t border-white/10 bg-sfc-navy-deep py-8">
+            <div className="sfc-container">
+              <div
+                className="text-center text-[11px] font-semibold uppercase tracking-[0.35em] text-sfc-sky-light"
+                style={{ fontFamily: "var(--ff-display)" }}
+              >
+                {t("footer.payment-methods", locale)}
+              </div>
+              <PaymentMethodsStrip size={26} className="mt-5" />
             </div>
           </div>
           {/* Footer info */}

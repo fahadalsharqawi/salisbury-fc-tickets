@@ -240,18 +240,22 @@ export default async function ConfirmationPage({
           {!isPending && (
             <div className="mt-2 flex items-center justify-between text-sm">
               <span className="text-stone-600">{t("confirm.paid-with", locale)}</span>
-              <span className="flex items-center gap-2 font-medium text-stone-900">
+              <span className="flex items-center gap-2 font-medium text-stone-900" dir="ltr">
                 <PaymentMethodLogo
                   method={booking.paymentMethod}
                   brand={booking.cardBrand}
-                  size={18}
+                  size={20}
                   className="rounded-sm"
                 />
-                <span>{paymentLabel(booking.paymentMethod, locale)}</span>
-                {booking.cardLast4 && (
-                  <span className="font-mono text-stone-500" dir="ltr">
-                    •••• {booking.cardLast4}
+                {booking.cardLast4 ? (
+                  // Standard masked card display: 12 hidden digits + last 4.
+                  <span className="font-mono tracking-[0.08em] text-stone-700">
+                    {"•".repeat(12)} {booking.cardLast4}
                   </span>
+                ) : (
+                  // Fall back to the method name only when Tap didn't give
+                  // us a masked card (e.g. KNET-style transfers).
+                  <span>{paymentLabel(booking.paymentMethod, locale)}</span>
                 )}
               </span>
             </div>

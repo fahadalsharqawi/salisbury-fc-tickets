@@ -372,6 +372,7 @@ const en: Dict = {
 
   // footer
   "footer.partners": "Our official partners",
+  "footer.payment-methods": "We accept",
   "footer.disclaimer":
     "Demo ticketing site · not affiliated with the club. Partner logos are property of their respective owners.",
 
@@ -718,6 +719,7 @@ const ar: Dict = {
 
   // footer
   "footer.partners": "شركاؤنا الرسميون",
+  "footer.payment-methods": "وسائل الدفع المقبولة",
   "footer.disclaimer":
     "موقع تذاكر تجريبي · غير تابع للنادي. شعارات الشركاء ملك لأصحابها.",
 
