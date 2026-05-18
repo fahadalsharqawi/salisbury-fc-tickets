@@ -38,6 +38,8 @@ export type Booking = {
   createdAt: string;
   tapChargeId?: string;
   confirmedAt?: string;
+  cardBrand?: string;
+  cardLast4?: string;
 };
 
 export type MatchWithAvailability = Match & {

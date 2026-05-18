@@ -47,6 +47,8 @@ type BookingRow = {
   created_at: string;
   tap_charge_id: string | null;
   confirmed_at: string | null;
+  card_brand: string | null;
+  card_last4: string | null;
 };
 
 // How long a pending booking holds its seats while the customer is on
@@ -93,6 +95,8 @@ function rowToBooking(r: BookingRow): Booking {
     createdAt: r.created_at,
     tapChargeId: r.tap_charge_id ?? undefined,
     confirmedAt: r.confirmed_at ?? undefined,
+    cardBrand: r.card_brand ?? undefined,
+    cardLast4: r.card_last4 ?? undefined,
   };
 }
 
@@ -345,12 +349,16 @@ export async function confirmBookingPayment(
   id: string,
   chargeId: string,
   paymentMethod: PaymentMethod,
+  cardBrand: string | null,
+  cardLast4: string | null,
 ): Promise<{ ok: true; booking: Booking } | { ok: false; error: string }> {
   const supabase = createAdminClient();
   const { data, error } = await supabase.rpc("confirm_booking_payment", {
     p_booking_id: id,
     p_charge_id: chargeId,
     p_payment_method: paymentMethod,
+    p_card_brand: cardBrand,
+    p_card_last4: cardLast4,
   });
   if (error) return { ok: false, error: humaniseDbError(error.message) };
   return { ok: true, booking: rowToBooking(data as BookingRow) };

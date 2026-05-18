@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TeamBadge } from "@/components/TeamBadge";
 import { getCurrency } from "@/lib/currency-server";
 import { getMatch } from "@/lib/db";
 import { formatLongKickoff, formatMoney } from "@/lib/format";
@@ -68,10 +69,12 @@ export default async function BookingFormPage({
                   {localize(match.competition, locale)}
                 </span>
               </div>
-              <h1 className="sfc-display mt-1.5 text-2xl font-bold leading-[1.05] sm:mt-2 sm:text-4xl">
-                {t("brand.name", locale)}{" "}
-                <span className="text-sfc-sky-light">{t("common.vs", locale)}</span>{" "}
-                {localize(match.opponent, locale)}
+              <h1 className="sfc-display mt-1.5 flex flex-wrap items-center gap-2.5 text-2xl font-bold leading-[1.05] sm:mt-2 sm:text-4xl">
+                <TeamBadge team="Salisbury FC" size="md" />
+                <span>{t("brand.name", locale)}</span>
+                <span className="text-sfc-sky-light">{t("common.vs", locale)}</span>
+                <TeamBadge team={match.opponent} size="md" />
+                <span>{localize(match.opponent, locale)}</span>
               </h1>
               <p className="mt-1 text-xs text-sfc-sky-light sm:text-sm">
                 {formatLongKickoff(match.kickoff)}

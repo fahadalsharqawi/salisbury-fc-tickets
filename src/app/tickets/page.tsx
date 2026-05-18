@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MotionItem, MotionStagger } from "@/components/motion/Motion";
+import { TeamBadge } from "@/components/TeamBadge";
 import { getCurrency } from "@/lib/currency-server";
 import { listMatches } from "@/lib/db";
 import { formatKickoff, formatMoney, type Currency } from "@/lib/format";
@@ -143,10 +144,12 @@ function FixtureRow({
               {localize(match.competition, locale)}
             </span>
           </div>
-          <div className="sfc-display mt-2 text-xl font-bold leading-[1.15] sm:text-2xl">
-            {t("brand.name", locale)}{" "}
-            <span className="text-sfc-n-400">{t("common.vs", locale)}</span>{" "}
-            {localize(match.opponent, locale)}
+          <div className="sfc-display mt-2 flex items-center gap-2.5 text-xl font-bold leading-[1.15] sm:text-2xl">
+            <TeamBadge team="Salisbury FC" size="sm" />
+            <span>{t("brand.name", locale)}</span>
+            <span className="text-sfc-n-400">{t("common.vs", locale)}</span>
+            <TeamBadge team={match.opponent} size="sm" />
+            <span>{localize(match.opponent, locale)}</span>
           </div>
           <div className="mt-1 text-sm text-sfc-n-600">
             {formatKickoff(match.kickoff)}

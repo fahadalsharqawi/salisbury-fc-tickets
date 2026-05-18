@@ -5,7 +5,14 @@ import {
   expirePendingBooking,
   getBooking,
 } from "@/lib/db";
-import { isCaptured, isFinalFailure, mapPaymentMethod, retrieveCharge } from "@/lib/tap";
+import {
+  getCardBrand,
+  getCardLast4,
+  isCaptured,
+  isFinalFailure,
+  mapPaymentMethod,
+  retrieveCharge,
+} from "@/lib/tap";
 
 // GET /booking/{id}/return?tap_id=chg_xxx
 //
@@ -49,7 +56,13 @@ export async function GET(
   }
 
   if (isCaptured(charge)) {
-    await confirmBookingPayment(id, charge.id, mapPaymentMethod(charge));
+    await confirmBookingPayment(
+      id,
+      charge.id,
+      mapPaymentMethod(charge),
+      getCardBrand(charge),
+      getCardLast4(charge),
+    );
     revalidatePath("/");
     revalidatePath("/tickets");
     revalidatePath(`/tickets/${booking.matchId}`);

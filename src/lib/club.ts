@@ -239,6 +239,136 @@ export const STANDINGS: StandingsRow[] = [
   { position: 17, team: "Salisbury",           played: 46, won: 14, drawn: 11, lost: 21, goalsFor: 50, goalsAgainst: 65, points: 53 },
 ];
 
+// URL slug for a past result. Built deterministically from the kickoff
+// date + opponent so /matches/[slug] is stable across renders.
+export function resultSlug(r: LastResult): string {
+  return `${r.date}-vs-${slugify(r.opponent)}`;
+}
+
+export function findResultBySlug(slug: string): LastResult | null {
+  return RESULTS.find((r) => resultSlug(r) === slug) ?? null;
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// ── Team badges ──────────────────────────────────────────────────────────
+//
+// Visual identity for every club that turns up in RESULTS / STANDINGS /
+// matches. The <TeamBadge> component renders either the `logo` image (if
+// set) or a coloured monogram using `bg` + `fg` + `short`. Crest PNGs
+// live under public/teams/ and were pulled from each club's Wikipedia
+// infobox.
+export type TeamBadge = {
+  short: string;
+  bg: string;
+  fg: string;
+  logo?: string;
+};
+
+const SFC_BADGE: TeamBadge = { short: "SFC", bg: "#1F4A6B", fg: "#FFFFFF", logo: "/logo.png" };
+
+export const TEAM_BADGES: Record<string, TeamBadge> = {
+  "Salisbury":           SFC_BADGE,
+  "Salisbury FC":        SFC_BADGE,
+
+  "Aveley":              { short: "AVE", bg: "#0B3D91", fg: "#FFFFFF", logo: "/teams/aveley.png" },
+  "Bath City":           { short: "BC",  bg: "#0E0E0E", fg: "#FFFFFF", logo: "/teams/bath-city.png" },
+  "Boreham Wood":        { short: "BW",  bg: "#111111", fg: "#FFFFFF", logo: "/teams/boreham-wood.png" },
+  "Chelmsford City":     { short: "CC",  bg: "#7A1D2C", fg: "#FFFFFF", logo: "/teams/chelmsford-city.png" },
+  "Dorking Wanderers":   { short: "DW",  bg: "#C81E25", fg: "#FFFFFF", logo: "/teams/dorking-wanderers.png" },
+  "Eastbourne Borough":  { short: "EB",  bg: "#C01933", fg: "#FFFFFF", logo: "/teams/eastbourne-borough.png" },
+  "Farnborough":         { short: "FAR", bg: "#D40C0C", fg: "#FFFFFF", logo: "/teams/farnborough.png" },
+  "Forest Green Rovers": { short: "FGR", bg: "#0E5C2F", fg: "#FFFFFF", logo: "/teams/forest-green-rovers.png" },
+  "Hemel Hempstead Town":{ short: "HEM", bg: "#C8102E", fg: "#FFFFFF", logo: "/teams/hemel-hempstead-town.png" },
+  "Hornchurch":          { short: "HOR", bg: "#C8102E", fg: "#FFFFFF", logo: "/teams/hornchurch.png" },
+  "Maidstone United":    { short: "MAI", bg: "#F7B500", fg: "#0C1620", logo: "/teams/maidstone-united.png" },
+  "Plymouth Parkway":    { short: "PP",  bg: "#0E5C2F", fg: "#FFFFFF", logo: "/teams/plymouth-parkway.png" },
+  "Slough Town":         { short: "SLO", bg: "#F4A300", fg: "#10254B", logo: "/teams/slough-town.png" },
+  "Tonbridge Angels":    { short: "TON", bg: "#1F4FA1", fg: "#FFFFFF", logo: "/teams/tonbridge-angels.png" },
+  "Truro City":          { short: "TRU", bg: "#0E0E0E", fg: "#FFFFFF", logo: "/teams/truro-city.png" },
+  "Welling United":      { short: "WEL", bg: "#C8102E", fg: "#FFFFFF", logo: "/teams/welling-united.png" },
+  "Worthing":            { short: "WOR", bg: "#C8102E", fg: "#FFFFFF", logo: "/teams/worthing.png" },
+  "Yeovil Town":         { short: "YEO", bg: "#0E5C2F", fg: "#FFFFFF", logo: "/teams/yeovil-town.png" },
+};
+
+export function getTeamBadge(name: string): TeamBadge {
+  const hit = TEAM_BADGES[name];
+  if (hit) return hit;
+  return { short: monogramFromName(name), bg: "#1F4A6B", fg: "#FFFFFF" };
+}
+
+function monogramFromName(name: string): string {
+  const SKIP = new Set(["TOWN", "UNITED", "CITY", "BOROUGH", "FC", "AFC"]);
+  const words = name
+    .replace(/[^A-Za-z\s]/g, "")
+    .split(/\s+/)
+    .map((w) => w.toUpperCase())
+    .filter((w) => w && !SKIP.has(w));
+  if (words.length === 0) return name.slice(0, 2).toUpperCase();
+  if (words.length === 1) return words[0].slice(0, 3);
+  return words.slice(0, 3).map((w) => w[0]).join("");
+}
+
+// ── Default lineup ───────────────────────────────────────────────────────
+//
+// Used by the /matches/[slug] match-centre Lineups tabs when a specific
+// result doesn't carry its own per-match squad data. Salisbury draws
+// from SQUAD; the opponent gets numbered placeholder slots.
+const SFC_STARTING_SLUGS = [
+  "will-buse",
+  "josh-sommerton", "dominic-revan", "ollie-morgan", "tom-davies",
+  "josh-keeya", "matt-briggs", "malachi-ogunleye", "josh-hedges",
+  "nathan-odokonyero", "noah-coppin",
+] as const;
+
+const SFC_SUB_SLUGS = [
+  "lewis-gunstone-gray", "camron-gbadebo", "max-jolliffe", "tommy-willard", "mohammad-dabre",
+] as const;
+
+export type Lineup = {
+  starting: Player[];
+  subs: Player[];
+};
+
+export function salisburyLineup(): Lineup {
+  return {
+    starting: SFC_STARTING_SLUGS.map((s) => SQUAD.find((p) => p.slug === s)).filter(
+      (p): p is Player => Boolean(p),
+    ),
+    subs: SFC_SUB_SLUGS.map((s) => SQUAD.find((p) => p.slug === s)).filter(
+      (p): p is Player => Boolean(p),
+    ),
+  };
+}
+
+export function placeholderLineup(): Lineup {
+  const mk = (n: number, pos: Position): Player => ({
+    slug: `placeholder-${n}`,
+    name: "Squad TBC",
+    position: pos,
+    number: n,
+  });
+  return {
+    starting: [
+      mk(1, "Goalkeeper"),
+      mk(2, "Defender"), mk(3, "Defender"), mk(4, "Defender"), mk(5, "Defender"),
+      mk(6, "Midfielder"), mk(7, "Midfielder"), mk(8, "Midfielder"), mk(11, "Midfielder"),
+      mk(9, "Forward"), mk(10, "Forward"),
+    ],
+    subs: [
+      mk(12, "Goalkeeper"), mk(14, "Defender"), mk(15, "Midfielder"),
+      mk(16, "Forward"), mk(17, "Forward"),
+    ],
+  };
+}
+
 export const STADIUM = {
   name: "Raymond McEnhill Stadium",
   shortName: "Ray Mac",

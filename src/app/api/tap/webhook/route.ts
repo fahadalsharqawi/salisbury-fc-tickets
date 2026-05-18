@@ -6,6 +6,8 @@ import {
   getBooking,
 } from "@/lib/db";
 import {
+  getCardBrand,
+  getCardLast4,
   isCaptured,
   isFinalFailure,
   mapPaymentMethod,
@@ -69,7 +71,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   if (isCaptured(payload)) {
-    await confirmBookingPayment(bookingId, payload.id, mapPaymentMethod(payload));
+    await confirmBookingPayment(
+      bookingId,
+      payload.id,
+      mapPaymentMethod(payload),
+      getCardBrand(payload),
+      getCardLast4(payload),
+    );
     revalidatePath(`/booking/${bookingId}`);
     revalidatePath(`/tickets/${booking.matchId}`);
   } else if (isFinalFailure(payload)) {

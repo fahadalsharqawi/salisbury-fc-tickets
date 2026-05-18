@@ -34,7 +34,7 @@ export default function WordsReveal({
         if (/^\s+$/.test(token)) return token;
         const idx = wordIndex++;
         return (
-          <span key={i} className="inline-block overflow-hidden align-baseline">
+          <span key={i} className="words-reveal-clip inline-block overflow-hidden align-baseline">
             <motion.span
               className="inline-block will-change-transform"
               initial={{ y: "1.1em", opacity: 0 }}
