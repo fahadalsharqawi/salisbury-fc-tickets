@@ -108,7 +108,7 @@ function Icon({
 }) {
   return (
     <img
-      src={`/payment-icons/${name}.svg`}
+      src={`/payment-icons/${name}.png`}
       alt={LABEL[name]}
       height={size}
       style={{ height: size, width: "auto" }}
