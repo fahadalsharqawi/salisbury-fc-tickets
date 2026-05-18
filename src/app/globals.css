@@ -74,17 +74,24 @@ body {
 }
 
 /* Arabic typography — Thmanyah typeface (loaded as local fonts in
-   layout.tsx). Latin pages keep Manrope/Inter; RTL pages swap to
-   Thmanyah Serif Display for headings and Thmanyah Sans for body.
+   layout.tsx). Latin pages keep Manrope/Inter; RTL pages swap by
+   redefining the body + display font-family CSS variables, so every
+   component that reads --ff-body / --ff-display / --font-sans /
+   --font-display (i.e. all of them) picks up Thmanyah automatically.
    Bigger leading + zero negative tracking so the dots above letters
    and descenders below have room to breathe. */
+[dir="rtl"] {
+  --ff-body:    var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ff-display: var(--font-thmanyah-serif-display), var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans:    var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-thmanyah-serif-display), var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 [dir="rtl"] body {
-  font-family: var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.65;
 }
 
 [dir="rtl"] .sfc-display {
-  font-family: var(--font-thmanyah-serif-display), var(--font-thmanyah-sans), var(--font-noto-arabic), -apple-system, sans-serif;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.5;
